@@ -2,7 +2,7 @@
 
 | 项目 | 内容 |
 |---|---|
-| 文档版本 | v1.4（对象存储由 MinIO 更换为 RustFS） |
+| 文档版本 | v1.5（砍掉标签功能，搜索兜底；未来需要时再加） |
 | 编写日期 | 2026-09-07 |
 | 技术栈 | Go (go-zero) + SQLite + Redis + RustFS / Docker |
 | 关联文档 | 《博客系统设计文档-前端》（接口契约为两份文档的共同约定） |
@@ -110,10 +110,11 @@ server/                         # 单服务：go-zero API（goctl 生成骨架�
 
 ```
 一期：
-admin (1) ───< posts (N) >──< tags (N)      posts (1) ───< comments (N) >── (1) admin
+admin (1) ───< posts (N)                     posts (1) ───< comments (N) >── (1) admin
                                                                └── 评论归属登录者（一期仅管理员），支持一级回复（parent_id 自关联）
-说明：文章与标签多对多（post_tags 中间表）；一期只有 admin 一张账号表，
-登录即管理员，无角色概念。
+说明：一期只有 admin 一张账号表，登录即管理员，无角色概念。
+不做标签功能（tags/post_tags 表已移除）——个人博客文章量少时标签无收益，
+筛选由全文搜索（keyword）兜底；未来文章量大了需要时再加表即可。
 
 二期按需演进：admin 表升级/扩展为通用用户表（加 email、role、status 等列），
 新建 user_oauth 绑定表。届时通过迁移脚本 ALTER / CREATE 完成，不影响一期数据。
@@ -150,21 +151,6 @@ admin (1) ───< posts (N) >──< tags (N)      posts (1) ───< comme
 | created_at / updated_at | DATETIME | 时间戳 |
 
 > 索引：`status + published_at DESC` 联合索引（列表查询）；`slug` 唯一索引；全文搜索使用 **SQLite FTS5 虚拟表**（`posts_fts`，同步 title/content），中文分词一期用 trigram 或简单 LIKE 兜底，二期可评估结巴分词插件。
-
-**tags 标签表**
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| id | INTEGER PRIMARY KEY AUTOINCREMENT | 主键 |
-| name | TEXT UNIQUE NOT NULL | 标签名 |
-| created_at | DATETIME | 创建时间 |
-
-**post_tags 文章-标签中间表**
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| post_id | INTEGER FK → posts(id) ON DELETE CASCADE | 复合主键之一 |
-| tag_id | INTEGER FK → tags(id) ON DELETE CASCADE | 复合主键之一 |
 
 **comments 评论表**
 
@@ -228,10 +214,9 @@ admin (1) ───< posts (N) >──< tags (N)      posts (1) ───< comme
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | /api/v1/posts | 文章分页列表，支持 `?tag=&keyword=` 过滤 |
+| GET | /api/v1/posts | 文章分页列表，支持 `?keyword=` 搜索 |
 | GET | /api/v1/posts/:slug | 文章详情（按 slug，SEO 友好） |
 | POST | /api/v1/posts/:slug/view | 阅读量 +1（前端进入详情页时调用，IP 去重） |
-| GET | /api/v1/tags | 标签列表（含文章数） |
 | GET | /api/v1/posts/:slug/comments | 评论列表 |
 | GET | /api/v1/site/config | 站点公开配置 |
 | GET | /rss.xml | RSS 订阅输出 |
