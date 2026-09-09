@@ -8,3 +8,7 @@ Log:
   MaxBackups: 14
   MaxAge: 14
   Level: info
+
+Auth:
+  AccessSecret: b117ed4210c119972125ffdd320ff65d2b7e438c7a58af164e60e32695b8f716
+  AccessExpire: 7200
