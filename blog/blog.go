@@ -24,7 +24,7 @@ func main() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	if err := logx.Init(c.Log); err != nil {
+	if err := logx.Init(c.ZeroLog); err != nil {
 		panic(err)
 	}
 	server := rest.MustNewServer(c.RestConf)

@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	rest.RestConf
-	Log       logx.Config
+	ZeroLog   logx.Config
 	SqliteDSN string
 	Auth      struct {
 		AccessSecret string

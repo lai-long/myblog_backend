@@ -8,6 +8,7 @@ import (
 	"myblog_backend/blog/internal/model"
 
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	_ "modernc.org/sqlite"
 )
 
 type ServiceContext struct {

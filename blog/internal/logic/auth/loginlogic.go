@@ -34,12 +34,12 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err erro
 	// 1. 按用户名查 admin
 	admin, err := l.svcCtx.AdminModel.FindOneByUsername(l.ctx, req.Username)
 	if err != nil {
-		return nil, errors.New("用户名或密码错误")
+		return nil, err
 	}
 
 	// 2. 验证密码（用我们写的 pkg/passwd）
 	if !pwd.Compare(admin.PasswordHash, req.Password) {
-		return nil, errors.New("用户名或密码错误")
+		return nil, errors.New("密码不匹配")
 	}
 
 	// 3. 签发 JWT
@@ -61,5 +61,4 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err erro
 		RefreshToken: "", // refresh token 下一步单独做，先留空
 		ExpiresIn:    expire,
 	}, nil
-	return
 }
