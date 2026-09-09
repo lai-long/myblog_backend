@@ -27,7 +27,7 @@ func NewLogoutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutLogi
 }
 
 func (l *LogoutLogic) Logout() (resp *types.EmptyResp, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	// 第一期简化：JWT 是无状态的，服务端不存 token，登出由前端丢弃 token 完成。
+	// 第二期做 refresh token / 黑名单时，这里才需要真的写库。
+	return &types.EmptyResp{}, nil
 }
