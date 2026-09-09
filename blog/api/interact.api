@@ -1,0 +1,42 @@
+type Comment {
+    Id        int64  `json:"id"`
+    ParentId  int64  `json:"parentId,optional"`
+    Nickname  string `json:"nickname"`
+    AvatarUrl string `json:"avatarUrl,optional"`
+    Content   string `json:"content"`
+    CreatedAt string `json:"createdAt"`
+}
+
+type CommentListResp {
+    List  []Comment `json:"list"`
+    Total int64     `json:"total"`
+}
+
+type CommentSaveReq {
+    Content  string `json:"content"`
+    ParentId int64  `json:"parentId,optional"`
+}
+
+// 公开：浏览量上报 + 评论列表
+@server (
+    group:  interact
+    prefix: /v1
+)
+service blog-api {
+    @handler ArticleView
+    post /articles/:slug/view returns (EmptyResp)
+
+    @handler CommentList
+    get /articles/:slug/comments returns (CommentListResp)
+}
+
+// 需登录：博主发评论/回复（一期仅管理员）
+@server (
+    jwt:    Auth
+    group:  interact
+    prefix: /v1
+)
+service blog-api {
+    @handler CommentCreate
+    post /articles/:slug/comments (CommentSaveReq) returns (EmptyResp)
+}

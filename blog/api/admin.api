@@ -1,0 +1,58 @@
+type AdminArticleListReq {
+    Page   int `form:"page,default=1"`
+    Size   int `form:"size,default=10"`
+    Status int `form:"status,optional"` // 按状态过滤
+}
+
+type UploadResp {
+    Url string `json:"url"`
+}
+
+type CommentAuditReq {
+    Status int `json:"status"` // 1=通过 2=垃圾
+}
+
+@server (
+    jwt:    Auth
+    group:  admin
+    prefix: /v1/admin
+)
+service blog-api {
+    // 文章管理
+    @handler AdminArticleList
+    get /articles (AdminArticleListReq) returns (ArticleListResp)
+
+    @handler ArticleCreate
+    post /articles (ArticleSaveReq) returns (EmptyResp)
+
+    @handler ArticleUpdate
+    put /articles/:id (ArticleSaveReq) returns (EmptyResp)
+
+    @handler ArticleDelete
+    delete /articles/:id returns (EmptyResp)
+
+    // 图片上传
+    @handler Upload
+    post /upload returns (UploadResp)
+
+    // 站点设置
+    @handler AdminSiteConfigSave
+    put /site/config (SiteConfigSaveReq) returns (EmptyResp)
+
+    // 评论管理
+    @handler CommentAudit
+    put /comments/:id (CommentAuditReq) returns (EmptyResp)
+
+    @handler CommentDelete
+    delete /comments/:id returns (EmptyResp)
+
+    // 账号设置
+    @handler ProfileGet
+    get /profile returns (ProfileResp)
+
+    @handler ProfileSave
+    put /profile (ProfileSaveReq) returns (EmptyResp)
+
+    @handler PasswordChange
+    put /password (PasswordReq) returns (EmptyResp)
+}

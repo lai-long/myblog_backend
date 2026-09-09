@@ -1,0 +1,52 @@
+type ArticleSummary {
+    Id          int64  `json:"id"`
+    Title       string `json:"title"`
+    Slug        string `json:"slug"`
+    Summary     string `json:"summary,optional"`
+    CoverUrl    string `json:"coverUrl,optional"`
+    Views       int64  `json:"views"`
+    PublishedAt string `json:"publishedAt"`
+}
+
+type ArticleDetail {
+    Id          int64  `json:"id"`
+    Title       string `json:"title"`
+    Slug        string `json:"slug"`
+    Content     string `json:"content"`
+    CoverUrl    string `json:"coverUrl,optional"`
+    Views       int64  `json:"views"`
+    PublishedAt string `json:"publishedAt"`
+}
+
+type ArticleListReq {
+    Page    int    `form:"page,default=1"`
+    Size    int    `form:"size,default=10"`
+    Keyword string `form:"keyword,optional"`
+}
+
+type ArticleListResp {
+    List  []ArticleSummary `json:"list"`
+    Total int64            `json:"total"`
+}
+
+type ArticleSaveReq {
+    Id       int64  `json:"id,optional"`      // 更新时带，新建不带
+    Title    string `json:"title"`
+    Slug     string `json:"slug"`
+    Summary  string `json:"summary,optional"`
+    Content  string `json:"content"`
+    CoverUrl string `json:"coverUrl,optional"`
+    Status   int    `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+}
+
+@server (
+    group:  public
+    prefix: /v1
+)
+service blog-api {
+    @handler ArticleList
+    get /articles (ArticleListReq) returns (ArticleListResp)
+
+    @handler ArticleDetail
+    get /articles/:slug returns (ArticleDetail)
+}

@@ -1,0 +1,2 @@
+// 不需要返回数据时用它（logout、删除等）
+type EmptyResp {}

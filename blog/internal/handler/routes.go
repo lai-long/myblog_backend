@@ -6,6 +6,10 @@ package handler
 import (
 	"net/http"
 
+	admin "myblog_backend/blog/internal/handler/admin"
+	auth "myblog_backend/blog/internal/handler/auth"
+	interact "myblog_backend/blog/internal/handler/interact"
+	public "myblog_backend/blog/internal/handler/public"
 	"myblog_backend/blog/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -16,9 +20,137 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodGet,
-				Path:    "/from/:name",
-				Handler: BlogHandler(serverCtx),
+				Path:    "/articles",
+				Handler: admin.AdminArticleListHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/articles",
+				Handler: admin.ArticleCreateHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/articles/:id",
+				Handler: admin.ArticleUpdateHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/articles/:id",
+				Handler: admin.ArticleDeleteHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/comments/:id",
+				Handler: admin.CommentAuditHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/comments/:id",
+				Handler: admin.CommentDeleteHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/password",
+				Handler: admin.PasswordChangeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/profile",
+				Handler: admin.ProfileGetHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/profile",
+				Handler: admin.ProfileSaveHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/site/config",
+				Handler: admin.AdminSiteConfigSaveHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/upload",
+				Handler: admin.UploadHandler(serverCtx),
 			},
 		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/v1/admin"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: auth.LoginHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/logout",
+				Handler: auth.LogoutHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/refresh",
+				Handler: auth.RefreshHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1/auth"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/articles/:slug/comments",
+				Handler: interact.CommentListHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/articles/:slug/view",
+				Handler: interact.ArticleViewHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/articles/:slug/comments",
+				Handler: interact.CommentCreateHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/v1"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/articles",
+				Handler: public.ArticleListHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/articles/:slug",
+				Handler: public.ArticleDetailHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/site/config",
+				Handler: public.SiteConfigHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1"),
 	)
 }

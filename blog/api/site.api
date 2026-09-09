@@ -1,0 +1,20 @@
+type SiteConfigResp {
+    SiteTitle string `json:"siteTitle"`
+    Icp       string `json:"icp,optional"`
+    GithubUrl string `json:"githubUrl,optional"`
+}
+
+type SiteConfigSaveReq {
+    SiteTitle string `json:"siteTitle,optional"`
+    Icp       string `json:"icp,optional"`
+    GithubUrl string `json:"githubUrl,optional"`
+}
+
+@server (
+    group:  public
+    prefix: /v1
+)
+service blog-api {
+    @handler SiteConfig
+    get /site/config returns (SiteConfigResp)
+}

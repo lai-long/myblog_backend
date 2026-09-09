@@ -1,0 +1,41 @@
+type LoginReq {
+    Username string `json:"username"`
+    Password string `json:"password"`
+}
+
+type LoginResp {
+    AccessToken  string `json:"accessToken"`
+    RefreshToken string `json:"refreshToken"`
+    ExpiresIn    int64  `json:"expiresIn"` // access token 有效期（秒）
+}
+
+type ProfileResp {
+    Username  string `json:"username"`
+    Nickname  string `json:"nickname"`
+    AvatarUrl string `json:"avatarUrl,optional"`
+}
+
+type ProfileSaveReq {
+    Nickname  string `json:"nickname,optional"`
+    AvatarUrl string `json:"avatarUrl,optional"`
+}
+
+type PasswordReq {
+    OldPassword string `json:"oldPassword"`
+    NewPassword string `json:"newPassword"`
+}
+
+@server (
+    group:  auth
+    prefix: /v1/auth
+)
+service blog-api {
+    @handler Login
+    post /login (LoginReq) returns (LoginResp)
+
+    @handler Refresh
+    post /refresh returns (LoginResp)
+
+    @handler Logout
+    post /logout returns (EmptyResp)
+}

@@ -3,10 +3,118 @@
 
 package types
 
-type Request struct {
-	Name string `path:"name,options=you|me"`
+type AdminArticleListReq struct {
+	Page   int `form:"page,default=1"`
+	Size   int `form:"size,default=10"`
+	Status int `form:"status,optional"` // 按状态过滤
 }
 
-type Response struct {
-	Message string `json:"message"`
+type ArticleDetail struct {
+	Id          int64  `json:"id"`
+	Title       string `json:"title"`
+	Slug        string `json:"slug"`
+	Content     string `json:"content"`
+	CoverUrl    string `json:"coverUrl,optional"`
+	Views       int64  `json:"views"`
+	PublishedAt string `json:"publishedAt"`
+}
+
+type ArticleListReq struct {
+	Page    int    `form:"page,default=1"`
+	Size    int    `form:"size,default=10"`
+	Keyword string `form:"keyword,optional"`
+}
+
+type ArticleListResp struct {
+	List  []ArticleSummary `json:"list"`
+	Total int64            `json:"total"`
+}
+
+type ArticleSaveReq struct {
+	Id       int64  `json:"id,optional"` // 更新时带，新建不带
+	Title    string `json:"title"`
+	Slug     string `json:"slug"`
+	Summary  string `json:"summary,optional"`
+	Content  string `json:"content"`
+	CoverUrl string `json:"coverUrl,optional"`
+	Status   int    `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+}
+
+type ArticleSummary struct {
+	Id          int64  `json:"id"`
+	Title       string `json:"title"`
+	Slug        string `json:"slug"`
+	Summary     string `json:"summary,optional"`
+	CoverUrl    string `json:"coverUrl,optional"`
+	Views       int64  `json:"views"`
+	PublishedAt string `json:"publishedAt"`
+}
+
+type Comment struct {
+	Id        int64  `json:"id"`
+	ParentId  int64  `json:"parentId,optional"`
+	Nickname  string `json:"nickname"`
+	AvatarUrl string `json:"avatarUrl,optional"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type CommentAuditReq struct {
+	Status int `json:"status"` // 1=通过 2=垃圾
+}
+
+type CommentListResp struct {
+	List  []Comment `json:"list"`
+	Total int64     `json:"total"`
+}
+
+type CommentSaveReq struct {
+	Content  string `json:"content"`
+	ParentId int64  `json:"parentId,optional"`
+}
+
+type EmptyResp struct {
+}
+
+type LoginReq struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginResp struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int64  `json:"expiresIn"` // access token 有效期（秒）
+}
+
+type PasswordReq struct {
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
+
+type ProfileResp struct {
+	Username  string `json:"username"`
+	Nickname  string `json:"nickname"`
+	AvatarUrl string `json:"avatarUrl,optional"`
+}
+
+type ProfileSaveReq struct {
+	Nickname  string `json:"nickname,optional"`
+	AvatarUrl string `json:"avatarUrl,optional"`
+}
+
+type SiteConfigResp struct {
+	SiteTitle string `json:"siteTitle"`
+	Icp       string `json:"icp,optional"`
+	GithubUrl string `json:"githubUrl,optional"`
+}
+
+type SiteConfigSaveReq struct {
+	SiteTitle string `json:"siteTitle,optional"`
+	Icp       string `json:"icp,optional"`
+	GithubUrl string `json:"githubUrl,optional"`
+}
+
+type UploadResp struct {
+	Url string `json:"url"`
 }

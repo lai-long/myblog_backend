@@ -1,15 +1,14 @@
 syntax = "v1"
 
-type Request {
-	Name string `path:"name,options=you|me"`
-}
+info (
+	title:   "my blog api"
+	desc:    "blog api definition（一期：管理员 + 游客）"
+	version: "v1"
+)
 
-type Response {
-	Message string `json:"message"`
-}
-
-service blog-api {
-	@handler BlogHandler
-	get /from/:name (Request) returns (Response)
-}
-
+import "api/common.api"
+import "api/auth.api"
+import "api/article.api"
+import "api/interact.api"
+import "api/site.api"
+import "api/admin.api"
