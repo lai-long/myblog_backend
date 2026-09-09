@@ -20,10 +20,13 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// errResp 统一错误响应体：HTTP 状态码恒为 200，业务成败只看 code
-type errResp struct {
+// body 统一响应体：HTTP 状态码恒为 200，业务成败只看 code
+// 成功：{"code":0,"message":"ok","data":...}
+// 失败：{"code":40101,"message":"用户名或密码错误"}（data 省略）
+type body struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
 var configFile = flag.String("f", "etc/blog-api.yaml", "the config file")
@@ -37,9 +40,18 @@ func main() {
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
-	// 统一错误处理：logic 返回的 error 一律转成 {code, message}
+	// 统一成功响应：logic 返回的数据包进 data，补上 code=0
+	httpx.SetOkHandler(func(ctx context.Context, v any) any {
+		return body{
+			Code:    errx.OK,
+			Message: "ok",
+			Data:    v,
+		}
+	})
+
+	// 统一错误响应：logic 返回的 error 转成 {code, message}
 	httpx.SetErrorHandlerCtx(func(ctx context.Context, err error) (int, interface{}) {
-		return http.StatusOK, errResp{
+		return http.StatusOK, body{
 			Code:    errx.CodeOf(err),
 			Message: errx.MsgOf(err),
 		}
