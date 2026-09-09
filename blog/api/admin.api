@@ -1,7 +1,23 @@
 type AdminArticleListReq {
     Page   int `form:"page,default=1"`
     Size   int `form:"size,default=10"`
-    Status int `form:"status,optional"` // 按状态过滤
+    Status int `form:"status,default=-1"` // -1=全部 0=草稿 1=发布 2=隐藏（不用 optional：0 和"不传"分不开）
+}
+
+// 后台列表比公开列表多带 status / updatedAt，方便管理
+type AdminArticleSummary {
+    Id          int64  `json:"id"`
+    Title       string `json:"title"`
+    Slug        string `json:"slug"`
+    Status      int    `json:"status"`
+    Views       int64  `json:"views"`
+    PublishedAt string `json:"publishedAt"`
+    UpdatedAt   string `json:"updatedAt"`
+}
+
+type AdminArticleListResp {
+    List  []AdminArticleSummary `json:"list"`
+    Total int64                 `json:"total"`
 }
 
 type UploadResp {
@@ -20,7 +36,7 @@ type CommentAuditReq {
 service blog-api {
     // 文章管理
     @handler AdminArticleList
-    get /articles (AdminArticleListReq) returns (ArticleListResp)
+    get /articles (AdminArticleListReq) returns (AdminArticleListResp)
 
     @handler ArticleCreate
     post /articles (ArticleSaveReq) returns (EmptyResp)

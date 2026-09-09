@@ -131,13 +131,8 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodGet,
-				Path:    "/articles",
-				Handler: public.ArticleListHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/articles/:slug",
-				Handler: public.ArticleDetailHandler(serverCtx),
+				Path:    "/site/config",
+				Handler: public.SiteConfigHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/v1"),
@@ -147,8 +142,13 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodGet,
-				Path:    "/site/config",
-				Handler: public.SiteConfigHandler(serverCtx),
+				Path:    "/articles",
+				Handler: public.ArticleListHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/articles/:slug",
+				Handler: public.ArticleDetailHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/v1"),

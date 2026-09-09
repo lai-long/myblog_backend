@@ -6,7 +6,22 @@ package types
 type AdminArticleListReq struct {
 	Page   int `form:"page,default=1"`
 	Size   int `form:"size,default=10"`
-	Status int `form:"status,optional"` // 按状态过滤
+	Status int `form:"status,default=-1"` // -1=全部 0=草稿 1=发布 2=隐藏（不用 optional：0 和"不传"分不开）
+}
+
+type AdminArticleListResp struct {
+	List  []AdminArticleSummary `json:"list"`
+	Total int64                 `json:"total"`
+}
+
+type AdminArticleSummary struct {
+	Id          int64  `json:"id"`
+	Title       string `json:"title"`
+	Slug        string `json:"slug"`
+	Status      int    `json:"status"`
+	Views       int64  `json:"views"`
+	PublishedAt string `json:"publishedAt"`
+	UpdatedAt   string `json:"updatedAt"`
 }
 
 type ArticleDetail struct {
