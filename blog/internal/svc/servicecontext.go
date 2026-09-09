@@ -12,14 +12,16 @@ import (
 )
 
 type ServiceContext struct {
-	Config     config.Config
-	AdminModel model.AdminModel
+	Config       config.Config
+	AdminModel   model.AdminModel
+	ArticleModel model.ArticleModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	conn := sqlx.NewSqlConn("sqlite", c.SqliteDSN)
 	return &ServiceContext{
-		Config:     c,
-		AdminModel: model.NewAdminModel(conn),
+		Config:       c,
+		AdminModel:   model.NewAdminModel(conn),
+		ArticleModel: model.NewArticleModel(conn),
 	}
 }
