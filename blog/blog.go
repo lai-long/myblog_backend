@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"myblog_backend/pkg/logx"
 
 	"myblog_backend/blog/internal/config"
 	"myblog_backend/blog/internal/handler"
@@ -23,6 +24,9 @@ func main() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
+	if err := logx.Init(c.Log); err != nil {
+		panic(err)
+	}
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 

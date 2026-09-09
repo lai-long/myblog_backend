@@ -1,3 +1,10 @@
 Name: blog-api
 Host: 0.0.0.0
 Port: 8888
+
+Log:
+  Path: logs/blog.log
+  MaxSize: 100
+  MaxBackups: 14
+  MaxAge: 14
+  Level: info
