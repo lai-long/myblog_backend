@@ -48,7 +48,7 @@ func (l *ArticleCreateLogic) ArticleCreate(req *types.ArticleSaveReq) (resp *typ
 		Content:     req.Content,
 		CoverUrl:    req.CoverUrl,
 		Status:      int64(req.Status), // .api 里是 int，model 是 int64，必须显式转
-		PublishedAt: time.Now(),
+		PublishedAt: time.Now().UTC(),  // 全库统一存 UTC：SQLite 的 CURRENT_TIMESTAMP 也是 UTC，两边才对得上
 	})
 	if err != nil {
 		return nil, errx.Wrap(err, errx.ServerError, "创建文章失败")

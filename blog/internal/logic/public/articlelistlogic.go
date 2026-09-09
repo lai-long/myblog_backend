@@ -5,6 +5,7 @@ package public
 
 import (
 	"context"
+	"time"
 
 	"myblog_backend/blog/internal/model"
 	"myblog_backend/blog/internal/svc"
@@ -58,7 +59,7 @@ func (l *ArticleListLogic) ArticleList(req *types.ArticleListReq) (resp *types.A
 			Summary:     a.Summary,
 			CoverUrl:    a.CoverUrl,
 			Views:       a.Views,
-			PublishedAt: a.PublishedAt.Format("2006-01-02 15:04:05"),
+			PublishedAt: a.PublishedAt.Format(time.RFC3339), // 带时区，前端 new Date() 才能解析对
 		})
 	}
 
