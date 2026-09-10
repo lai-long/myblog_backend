@@ -2,7 +2,7 @@
 
 | 项目 | 内容 |
 |---|---|
-| 文档版本 | v1.5（砍掉标签功能，搜索兜底；未来需要时再加） |
+| 文档版本 | v1.6（评论对游客开放、发表进待审核；限流方案独立成文） |
 | 编写日期 | 2026-09-07 |
 | 技术栈 | Go (go-zero) + SQLite + Redis + RustFS / Docker |
 | 关联文档 | 《博客系统设计文档-前端》（接口契约为两份文档的共同约定） |
@@ -21,11 +21,11 @@
 
 | 角色 | 一期 | 二期 |
 |---|---|---|
-| 游客（Guest） | 浏览文章、搜索、订阅 RSS；**评论区只读**（能看到管理员回复） | 同左 |
+| 游客（Guest） | 浏览文章、搜索、订阅 RSS；**可发表评论**（可选填昵称，发表后一律进待审核，管理员通过后公开可见） | 同左 |
 | 注册用户（User） | ——（不存在） | GitHub OAuth / 邮箱注册登录，发表评论、管理自己的评论 |
 | 管理员（Admin） | 用户名密码登录；文章增删改、评论管理（可回复）、站点配置 | + 用户管理（封禁/解封） |
 
-> 一期的评论：不开放发表入口，仅管理员可发表/回复（作为"博主回复"展示）。这样评论区 UI 与数据表一期就能建好，二期打开注册后无需改结构。注册通道规划为 GitHub OAuth（主）+ 邮箱注册（兜底）；QQ 互联列入三期（需域名备案）。
+> 一期的评论：游客可直接发表（无需注册，可选填昵称），不开放即时展示——发表后一律进入待审核（status=0），管理员在后台审核通过后公开可见，垃圾评论可标记或直接删除。注册通道规划为 GitHub OAuth（主）+ 邮箱注册（兜底）；QQ 互联列入三期（需域名备案）。
 
 ---
 
@@ -110,14 +110,16 @@ server/                         # 单服务：go-zero API（goctl 生成骨架�
 
 ```
 一期：
-admin (1) ───< posts (N)                     posts (1) ───< comments (N) >── (1) admin
-                                                               └── 评论归属登录者（一期仅管理员），支持一级回复（parent_id 自关联）
+admin (1) ───< posts (N)                     posts (1) ───< comments (N)
+                                                               └── 游客评论：nickname 直接落库，不关联账号表；
+                                                                   支持一级回复（parent_id 自关联）
 说明：一期只有 admin 一张账号表，登录即管理员，无角色概念。
 不做标签功能（tags/post_tags 表已移除）——个人博客文章量少时标签无收益，
 筛选由全文搜索（keyword）兜底；未来文章量大了需要时再加表即可。
 
 二期按需演进：admin 表升级/扩展为通用用户表（加 email、role、status 等列），
-新建 user_oauth 绑定表。届时通过迁移脚本 ALTER / CREATE 完成，不影响一期数据。
+新建 user_oauth 绑定表；comments 表届时加 user_id 列关联登录用户（一期游客评论 user_id 为空）。
+届时通过迁移脚本 ALTER / CREATE 完成，不影响一期数据。
 ```
 
 ### 3.2 表结构
@@ -152,18 +154,21 @@ admin (1) ───< posts (N)                     posts (1) ───< comments
 
 > 索引：`status + published_at DESC` 联合索引（列表查询）；`slug` 唯一索引；全文搜索使用 **SQLite FTS5 虚拟表**（`posts_fts`，同步 title/content），中文分词一期用 trigram 或简单 LIKE 兜底，二期可评估结巴分词插件。
 
-**comments 评论表**
+**comments 评论表**（实际表名为 `comment`，见 migrations/0004_comment.sql）
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | id | INTEGER PRIMARY KEY AUTOINCREMENT | 主键 |
-| post_id | INTEGER FK → posts(id) ON DELETE CASCADE | 所属文章 |
-| parent_id | INTEGER FK → comments(id) NULL | 回复目标（仅一级） |
-| author_id | INTEGER FK → admin(id) NOT NULL | 评论者（一期只有管理员会写入；二期随用户表演进调整外键） |
+| article_id | INTEGER NOT NULL | 所属文章（逻辑外键，未建物理 FK） |
+| parent_id | INTEGER NOT NULL DEFAULT 0 | 0=顶层评论；非 0=回复目标的评论 id（仅一级；用 0 不用 NULL 是为了 Scan 到 int64 不报错） |
+| nickname | TEXT NOT NULL | 游客昵称（不填则后端给默认值；一期评论不关联账号表，昵称直接落库） |
+| avatar_url | TEXT NOT NULL DEFAULT '' | 头像（一期恒为空，预留） |
 | content | TEXT NOT NULL | 评论内容（纯文本，防 XSS，长度 ≤1000） |
-| status | INTEGER NOT NULL DEFAULT 1 | 0=待审核 1=通过 2=垃圾 |
-| ip | TEXT | 记录 IP（限流与风控） |
+| status | INTEGER NOT NULL DEFAULT 0 | 0=待审核 1=通过 2=垃圾（游客发表一律 0，先审后发） |
 | created_at | DATETIME | 时间戳 |
+| deleted_at | DATETIME NULL | 软删除（NULL 表示未删除） |
+
+> 索引：`article_id + status + created_at` 联合索引（公开列表按文章查已通过评论）。
 
 **site_configs 站点配置表**（KV 结构，避免硬编码）
 
@@ -218,6 +223,7 @@ admin (1) ───< posts (N)                     posts (1) ───< comments
 | GET | /api/v1/posts/:slug | 文章详情（按 slug，SEO 友好） |
 | POST | /api/v1/posts/:slug/view | 阅读量 +1（前端进入详情页时调用，IP 去重） |
 | GET | /api/v1/posts/:slug/comments | 评论列表 |
+| POST | /api/v1/posts/:slug/comments | 发表评论（游客可写，可选昵称；一律进待审核，管理员通过后公开；限流方案见 doc/ratelimit.md） |
 | GET | /api/v1/site/config | 站点公开配置 |
 | GET | /rss.xml | RSS 订阅输出 |
 
@@ -243,7 +249,6 @@ admin (1) ───< posts (N)                     posts (1) ───< comments
 | GET | /api/v1/user/profile | **一期** | 当前用户信息（一期即 admin 自己） |
 | PUT | /api/v1/user/profile | **一期** | 修改昵称 / 头像 |
 | PUT | /api/v1/user/password | **一期** | 修改密码 |
-| POST | /api/v1/posts/:slug/comments | **一期**（仅 admin） | 一期仅管理员可发表（博主回复）；二期开放注册用户（限流：同用户 1 分钟 1 条） |
 | DELETE | /api/v1/comments/:id | 二期 | 删除自己的评论 |
 
 **后台管理接口（需 JWT 登录，一期只有管理员，登录即授权）**
@@ -298,11 +303,11 @@ admin (1) ───< posts (N)                     posts (1) ───< comments
 
 | 风险 | 对策 |
 |---|---|
-| 密码安全 | bcrypt(cost=12) 哈希存储，登录限流（同 IP 每分钟 5 次） |
+| 密码安全 | bcrypt(cost=12) 哈希存储，登录限流（同 IP 每分钟 5 次 + 同账号连续失败锁定；方案见 doc/ratelimit.md，待实施） |
 | SQL 注入 | 全程参数化查询（goctl 生成的 model 与手写 SQL 均禁止字符串拼接） |
 | CSRF | API 使用 Bearer Token（非 Cookie 认证）天然免疫；RefreshToken Cookie 加 SameSite=Strict |
 | Token 窃取 | AccessToken 短时效 2h；RefreshToken httpOnly + Secure |
-| 接口滥用 | go-zero 内置限流中间件（评论、登录、view 接口）；上传限制类型与大小 |
+| 接口滥用 | 登录/评论接口按 IP 限流（内存令牌桶，方案见 doc/ratelimit.md，待实施）；上传限制类型与大小 |
 | XSS（服务端侧） | 评论纯文本存储，输出不拼接 HTML；响应设置安全头 |
 | 二期新增关注 | 批量注册（限流 + 邮箱验证 + 未验证 7 天清理）、OAuth state 防 CSRF——随注册功能落地时启用 |
 
@@ -411,7 +416,7 @@ git push main
 
 | 风险 | 说明 | 对策 |
 |---|---|---|
-| 评论垃圾信息 | 一期评论仅管理员可写，无风险；二期开放注册后上升 | 二期：评论强制登录 + 邮箱验证 + 限流 + 管理员封禁，必要时加 Turnstile |
+| 评论垃圾信息 | 一期游客可写（全部进待审核），存在脚本灌库风险 | 先审后发，垃圾内容不会公开；按 IP 限流（方案见 doc/ratelimit.md，待实施）；二期开放注册后再加邮箱验证与封禁，必要时加 Turnstile |
 | SQLite 并发写入上限 | 单写者模型，高并发写入排队 | 写操作极少；WAL + busy_timeout 已覆盖；流量暴涨再迁 PostgreSQL |
 | RustFS 单节点无冗余 | 挂盘即丢数据 | 每日备份 + `mc`/`rclone` 异地同步 |
 | RustFS 处于 alpha 阶段 | 项目较新，生产验证有限，大文件读性能暂弱 | 仅限单节点小数据量场景；每日备份兜底；出严重问题可随时切回 MinIO 或直上云 OSS（S3 兼容，业务代码零改动） |
