@@ -38,17 +38,18 @@ type (
 	}
 
 	Article struct {
-		Id          int64     `db:"id"`
-		Title       string    `db:"title"`
-		Slug        string    `db:"slug"`
-		Summary     string    `db:"summary"`
-		Content     string    `db:"content"`
-		CoverUrl    string    `db:"cover_url"`
-		Status      int64     `db:"status"`
-		Views       int64     `db:"views"`
-		PublishedAt time.Time `db:"published_at"`
-		CreatedAt   time.Time `db:"created_at"`
-		UpdatedAt   time.Time `db:"updated_at"`
+		Id          int64        `db:"id"`
+		Title       string       `db:"title"`
+		Slug        string       `db:"slug"`
+		Summary     string       `db:"summary"`
+		Content     string       `db:"content"`
+		CoverUrl    string       `db:"cover_url"`
+		Status      int64        `db:"status"`
+		Views       int64        `db:"views"`
+		PublishedAt time.Time    `db:"published_at"`
+		CreatedAt   time.Time    `db:"created_at"`
+		UpdatedAt   time.Time    `db:"updated_at"`
+		DeletedAt   sql.NullTime `db:"deleted_at"`
 	}
 )
 
@@ -94,14 +95,14 @@ func (m *defaultArticleModel) FindOneBySlug(ctx context.Context, slug string) (*
 }
 
 func (m *defaultArticleModel) Insert(ctx context.Context, data *Article) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, articleRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Title, data.Slug, data.Summary, data.Content, data.CoverUrl, data.Status, data.Views, data.PublishedAt)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, articleRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Title, data.Slug, data.Summary, data.Content, data.CoverUrl, data.Status, data.Views, data.PublishedAt, data.DeletedAt)
 	return ret, err
 }
 
 func (m *defaultArticleModel) Update(ctx context.Context, newData *Article) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, articleRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Title, newData.Slug, newData.Summary, newData.Content, newData.CoverUrl, newData.Status, newData.Views, newData.PublishedAt, newData.Id)
+	_, err := m.conn.ExecCtx(ctx, query, newData.Title, newData.Slug, newData.Summary, newData.Content, newData.CoverUrl, newData.Status, newData.Views, newData.PublishedAt, newData.DeletedAt, newData.Id)
 	return err
 }
 

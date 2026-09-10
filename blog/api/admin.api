@@ -4,6 +4,11 @@ type AdminArticleListReq {
     Status int `form:"status,default=-1"` // -1=全部 0=草稿 1=发布 2=隐藏（不用 optional：0 和"不传"分不开）
 }
 
+// 路径参数必须声明成 Req 类型，否则 goctl 生成的 logic 拿不到 id
+type ArticleIdReq {
+    Id int64 `path:"id"`
+}
+
 // 后台列表比公开列表多带 status / updatedAt，方便管理
 type AdminArticleSummary {
     Id          int64  `json:"id"`
@@ -45,7 +50,7 @@ service blog-api {
     put /articles/:id (ArticleSaveReq) returns (EmptyResp)
 
     @handler ArticleDelete
-    delete /articles/:id returns (EmptyResp)
+    delete /articles/:id (ArticleIdReq) returns (EmptyResp)
 
     // 图片上传
     @handler Upload

@@ -38,6 +38,10 @@ type ArticleDetailReq struct {
 	Slug string `path:"slug"`
 }
 
+type ArticleIdReq struct {
+	Id int64 `path:"id"`
+}
+
 type ArticleListReq struct {
 	Page    int    `form:"page,default=1"`
 	Size    int    `form:"size,default=10"`

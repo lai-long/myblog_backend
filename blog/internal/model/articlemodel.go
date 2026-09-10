@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -53,6 +54,7 @@ func buildListWhere(cond ArticleListCond) (string, []any) {
 		where []string
 		args  []any
 	)
+	where = append(where, "`deleted_at` IS NULL") // 软删除：所有列表查询都排除已删除的
 	if cond.Status != nil {
 		where = append(where, "`status` = ?")
 		args = append(args, *cond.Status)
@@ -92,17 +94,58 @@ func (m *customArticleModel) Count(ctx context.Context, cond ArticleListCond) (i
 	return total, nil
 }
 
+// FindOne 覆盖 goctl 生成的版本，加上"未删除"条件，否则软删后还能被查出来
+func (m *customArticleModel) FindOne(ctx context.Context, id int64) (*Article, error) {
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE `id` = ? AND `deleted_at` IS NULL LIMIT 1",
+		articleRows, m.table)
+	var resp Article
+	if err := m.conn.QueryRowCtx(ctx, &resp, query, id); err != nil {
+		return nil, errFromNotFoundErr(err)
+	}
+	return &resp, nil
+}
+
+// FindOneBySlug 同理，加"未删除"条件
+func (m *customArticleModel) FindOneBySlug(ctx context.Context, slug string) (*Article, error) {
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE `slug` = ? AND `deleted_at` IS NULL LIMIT 1",
+		articleRows, m.table)
+	var resp Article
+	if err := m.conn.QueryRowCtx(ctx, &resp, query, slug); err != nil {
+		return nil, errFromNotFoundErr(err)
+	}
+	return &resp, nil
+}
+
+// errFromNotFoundErr 把驱动的"没查到"统一转成 model.ErrNotFound，logic 才能用 errors.Is 判断
+func errFromNotFoundErr(err error) error {
+	if errors.Is(err, sqlx.ErrNotFound) {
+		return ErrNotFound
+	}
+	return err
+}
+
 // Update 覆盖 goctl 生成的版本。
 // 原版把 updated_at 当"自动字段"排除在 SET 外（那是 MySQL ON UPDATE 的假设），
 // 而 SQLite 没有这个机制，updated_at 会永远停在创建时间。这里补写它。
+// deleted_at 刻意不写：更新操作不应该改变删除状态。
 // 注意：Article 结构体增删字段时，下面 ExecCtx 的参数顺序要跟着改。
 func (m *customArticleModel) Update(ctx context.Context, data *Article) error {
 	data.UpdatedAt = time.Now().UTC()
-	query := fmt.Sprintf("UPDATE %s SET %s, `updated_at` = ? WHERE `id` = ?",
-		m.table, articleRowsWithPlaceHolder)
+	query := fmt.Sprintf("UPDATE %s SET `title` = ?, `slug` = ?, `summary` = ?, `content` = ?, "+
+		"`cover_url` = ?, `status` = ?, `views` = ?, `published_at` = ?, `updated_at` = ? "+
+		"WHERE `id` = ? AND `deleted_at` IS NULL", m.table)
 	_, err := m.conn.ExecCtx(ctx, query,
 		data.Title, data.Slug, data.Summary, data.Content, data.CoverUrl,
 		data.Status, data.Views, data.PublishedAt, data.UpdatedAt, data.Id)
+	return err
+}
+
+// Delete 改成软删除：只打删除标记，数据还在库里。
+// 加 deleted_at IS NULL 条件，重复删同一篇不会覆盖第一次的删除时间。
+func (m *customArticleModel) Delete(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("UPDATE %s SET `deleted_at` = ? WHERE `id` = ? AND `deleted_at` IS NULL",
+		m.table)
+	_, err := m.conn.ExecCtx(ctx, query, time.Now().UTC(), id)
 	return err
 }
 
