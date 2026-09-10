@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
@@ -89,6 +90,20 @@ func (m *customArticleModel) Count(ctx context.Context, cond ArticleListCond) (i
 		return 0, err
 	}
 	return total, nil
+}
+
+// Update 覆盖 goctl 生成的版本。
+// 原版把 updated_at 当"自动字段"排除在 SET 外（那是 MySQL ON UPDATE 的假设），
+// 而 SQLite 没有这个机制，updated_at 会永远停在创建时间。这里补写它。
+// 注意：Article 结构体增删字段时，下面 ExecCtx 的参数顺序要跟着改。
+func (m *customArticleModel) Update(ctx context.Context, data *Article) error {
+	data.UpdatedAt = time.Now().UTC()
+	query := fmt.Sprintf("UPDATE %s SET %s, `updated_at` = ? WHERE `id` = ?",
+		m.table, articleRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query,
+		data.Title, data.Slug, data.Summary, data.Content, data.CoverUrl,
+		data.Status, data.Views, data.PublishedAt, data.UpdatedAt, data.Id)
+	return err
 }
 
 // IncrViews 浏览量 +1。用 SQL 自增而不是"读出来+1再写回"，避免并发下互相覆盖

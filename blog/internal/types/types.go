@@ -50,7 +50,7 @@ type ArticleListResp struct {
 }
 
 type ArticleSaveReq struct {
-	Id       int64  `json:"id,optional"` // 更新时带，新建不带
+	Id       int64  `json:"id,optional" path:"id"` // 更新走路径参数，新建不带
 	Title    string `json:"title"`
 	Slug     string `json:"slug"`
 	Summary  string `json:"summary,optional"`
