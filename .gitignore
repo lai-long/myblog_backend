@@ -1,3 +1,6 @@
 /data
 /logs
 .idea/
+
+# 含真实密钥的生产配置，由运维在服务器上创建，禁止提交
+blog-api.prod.yaml

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"myblog_backend/pkg/logx"
 	"net/http"
+	"strings"
 
 	"myblog_backend/blog/internal/config"
 	"myblog_backend/blog/internal/handler"
@@ -37,7 +38,18 @@ func main() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	server := rest.MustNewServer(c.RestConf)
+	server := rest.MustNewServer(c.RestConf,
+		// JWT 鉴权失败时返回统一 {code,message}，而不是空 body
+		rest.WithUnauthorizedCallback(func(w http.ResponseWriter, r *http.Request, err error) {
+			code := errx.TokenInvalid
+			msg := "未登录或登录已失效"
+			if err != nil && strings.Contains(err.Error(), "expired") {
+				code = errx.TokenExpired
+				msg = "登录已过期，请重新登录"
+			}
+			httpx.WriteJson(w, http.StatusOK, body{Code: code, Message: msg})
+		}),
+	)
 	defer server.Stop()
 
 	// 统一成功响应：logic 返回的数据包进 data，补上 code=0

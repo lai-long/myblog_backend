@@ -1,0 +1,52 @@
+name: build
+
+# push 到 main 或打 v* tag 时，在 GitHub 托管的 runner 上构建并推送镜像
+# 服务器本身从不编译，只负责 docker pull 运行
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  packages: write # 推送到 GHCR 需要
+
+env:
+  # 镜像名：ghcr.io/<仓库owner>/<仓库名>。要换成 Docker Hub / 阿里云 ACR 就改这一行和下面的 login
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 生成镜像标签
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=ref,event=branch      # main 分支 -> :main
+            type=semver,pattern={{version}}  # v1.2.3 -> :1.2.3 和 :1.2 和 :1
+            type=sha                    # 也打一个 :sha-xxxx 便于回滚
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

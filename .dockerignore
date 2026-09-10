@@ -1,0 +1,11 @@
+# 不要打进镜像的内容
+.git
+.idea
+data/
+logs/
+tools/
+doc/
+*.md
+
+# 本地编译产物（如果有人本地 go build 过）
+blog/blog

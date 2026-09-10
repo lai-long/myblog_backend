@@ -19,6 +19,12 @@ import (
 // defaultNickname 游客不填昵称时的兜底
 const defaultNickname = "匿名用户"
 
+// 长度上限：数据库字段有限，超长直接拒绝，避免落库报错
+const (
+	maxCommentContent  = 2000
+	maxCommentNickname = 32
+)
+
 type CommentCreateLogic struct {
 	logx.Logger
 	ctx    context.Context
@@ -64,10 +70,16 @@ func (l *CommentCreateLogic) CommentCreate(req *types.CommentSaveReq) (resp *typ
 	if content == "" {
 		return nil, errx.New(errx.ParamError, "评论内容不能为空")
 	}
+	if len([]rune(content)) > maxCommentContent {
+		return nil, errx.New(errx.ParamError, "评论内容过长（上限 2000 字）")
+	}
 
 	nickname := strings.TrimSpace(req.Nickname)
 	if nickname == "" {
 		nickname = defaultNickname
+	}
+	if len([]rune(nickname)) > maxCommentNickname {
+		return nil, errx.New(errx.ParamError, "昵称过长（上限 32 字）")
 	}
 
 	// 3. 入库，status=0 待审核，管理员通过后才会公开
