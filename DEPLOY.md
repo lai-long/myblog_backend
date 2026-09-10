@@ -80,6 +80,12 @@ OSS:
 ### 3.3 构建并启动
 
 ```bash
+./deploy.sh   # 一键脚本：拉代码 -> 检查配置 -> 构建启动 -> 健康检查
+```
+
+或手动执行：
+
+```bash
 docker compose up -d --build
 ```
 
@@ -115,11 +121,10 @@ go run ./tools/adminhashpwd '你的密码'
 
 ```bash
 cd myblog_backend
-git pull
-docker compose up -d --build    # 只重建变化的部分，自动迁移新表结构
+./deploy.sh    # 等价于 git pull + docker compose up -d --build + 健康检查
 ```
 
-回滚：`git checkout <旧 commit>` 后再 `docker compose up -d --build`。
+回滚：`git checkout <旧 commit>` 后 `./deploy.sh --skip-pull`（跳过 pull，直接按当前代码重建）。
 
 > 注意：数据库迁移是单向的（只有 up 没有 down），回滚代码前确认旧代码兼容新表结构；一期表结构变更少，一般无碍。
 
@@ -153,6 +158,7 @@ docker compose up -d --build    # 只重建变化的部分，自动迁移新表�
 ## 7. 常见问题
 
 - **构建被 kill / 卡死**：2C2G 内存不够，先加 swap 再重试。
+- **构建卡在拉 Go 依赖 / 报 proxy.golang.org 超时**：Dockerfile 默认用国内代理 `goproxy.cn`；海外服务器构建时覆盖：`docker compose build --build-arg GOPROXY=https://proxy.golang.org,direct`。
 - **首次启动报"表不存在"**：不会。服务启动已自动跑迁移；若你手动换了 DB 文件，确保该 DB 执行过迁移（可用 `go run ./tools/migrate -dsn <path>` 手工补）。
 - **上传图片报 TLS / x509 错误**：镜像已内置 CA 证书；若出现，通常是 `OSS.Endpoint` 配错或网络不通。
 - **`401` 空响应**：已修复，现在返回 `{"code":40103,"message":"未登录或登录已失效"}`。
