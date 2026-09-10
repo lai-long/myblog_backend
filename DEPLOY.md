@@ -80,7 +80,7 @@ OSS:
 ### 3.3 构建并启动
 
 ```bash
-./deploy.sh   # 一键脚本：拉代码 -> 检查配置 -> 构建启动 -> 健康检查
+./deploy.sh   # 一键脚本：检查配置 -> 构建启动 -> 健康检查
 ```
 
 或手动执行：
@@ -121,10 +121,11 @@ go run ./tools/adminhashpwd '你的密码'
 
 ```bash
 cd myblog_backend
-./deploy.sh    # 等价于 git pull + docker compose up -d --build + 健康检查
+git pull        # 拉代码这步你自己做
+./deploy.sh     # 构建 + 启动 + 健康检查
 ```
 
-回滚：`git checkout <旧 commit>` 后 `./deploy.sh --skip-pull`（跳过 pull，直接按当前代码重建）。
+回滚：`git checkout <旧 commit>` 后直接 `./deploy.sh`。
 
 > 注意：数据库迁移是单向的（只有 up 没有 down），回滚代码前确认旧代码兼容新表结构；一期表结构变更少，一般无碍。
 
