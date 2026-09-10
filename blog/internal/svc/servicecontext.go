@@ -13,11 +13,12 @@ import (
 )
 
 type ServiceContext struct {
-	Config       config.Config
-	AdminModel   model.AdminModel
-	ArticleModel model.ArticleModel
-	CommentModel model.CommentModel
-	OSS          *oss.Client
+	Config        config.Config
+	AdminModel    model.AdminModel
+	ArticleModel  model.ArticleModel
+	CommentModel  model.CommentModel
+	SettingsModel *model.SettingsModel
+	OSS           *oss.Client
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -38,10 +39,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	}
 
 	return &ServiceContext{
-		Config:       c,
-		AdminModel:   model.NewAdminModel(conn),
-		ArticleModel: model.NewArticleModel(conn),
-		CommentModel: model.NewCommentModel(conn),
-		OSS:          ossClient,
+		Config:        c,
+		AdminModel:    model.NewAdminModel(conn),
+		ArticleModel:  model.NewArticleModel(conn),
+		CommentModel:  model.NewCommentModel(conn),
+		SettingsModel: model.NewSettingsModel(conn),
+		OSS:           ossClient,
 	}
 }
