@@ -30,9 +30,6 @@ type CommentSaveReq {
     prefix: /v1
 )
 service blog-api {
-    @handler ArticleView
-    post /articles/:slug/view returns (EmptyResp)
-
     @handler CommentList
     get /articles/:slug/comments (CommentListReq) returns (CommentListResp)
 

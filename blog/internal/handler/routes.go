@@ -116,10 +116,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/articles/:slug/comments",
 				Handler: interact.CommentCreateHandler(serverCtx),
 			},
+		},
+		rest.WithPrefix("/v1"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
 			{
-				Method:  http.MethodPost,
-				Path:    "/articles/:slug/view",
-				Handler: interact.ArticleViewHandler(serverCtx),
+				Method:  http.MethodGet,
+				Path:    "/site/config",
+				Handler: public.SiteConfigHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/v1"),
@@ -136,17 +142,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodGet,
 				Path:    "/articles/:slug",
 				Handler: public.ArticleDetailHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/v1"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodGet,
-				Path:    "/site/config",
-				Handler: public.SiteConfigHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/v1"),
