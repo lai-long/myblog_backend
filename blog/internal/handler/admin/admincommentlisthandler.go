@@ -12,16 +12,16 @@ import (
 	"myblog_backend/blog/internal/types"
 )
 
-func CommentDeleteHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func AdminCommentListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.CommentIdReq
+		var req types.AdminCommentListReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := admin.NewCommentDeleteLogic(r.Context(), svcCtx)
-		resp, err := l.CommentDelete(&req)
+		l := admin.NewAdminCommentListLogic(r.Context(), svcCtx)
+		resp, err := l.AdminCommentList(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

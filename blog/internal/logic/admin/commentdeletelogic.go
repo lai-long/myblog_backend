@@ -26,7 +26,7 @@ func NewCommentDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Com
 	}
 }
 
-func (l *CommentDeleteLogic) CommentDelete() (resp *types.EmptyResp, err error) {
+func (l *CommentDeleteLogic) CommentDelete(req *types.CommentIdReq) (resp *types.EmptyResp, err error) {
 	// todo: add your logic here and delete this line
 
 	return

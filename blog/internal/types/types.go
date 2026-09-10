@@ -24,6 +24,28 @@ type AdminArticleSummary struct {
 	UpdatedAt   string `json:"updatedAt"`
 }
 
+type AdminComment struct {
+	Id           int64  `json:"id"`
+	ArticleId    int64  `json:"articleId"`
+	ArticleTitle string `json:"articleTitle"`
+	ParentId     int64  `json:"parentId"`
+	Nickname     string `json:"nickname"`
+	Content      string `json:"content"`
+	Status       int    `json:"status"`
+	CreatedAt    string `json:"createdAt"`
+}
+
+type AdminCommentListReq struct {
+	Page   int `form:"page,default=1"`
+	Size   int `form:"size,default=10"`
+	Status int `form:"status,default=-1"` // -1=全部 0=待审核 1=通过 2=垃圾
+}
+
+type AdminCommentListResp struct {
+	List  []AdminComment `json:"list"`
+	Total int64          `json:"total"`
+}
+
 type ArticleDetail struct {
 	Id          int64  `json:"id"`
 	Title       string `json:"title"`
@@ -83,7 +105,16 @@ type Comment struct {
 }
 
 type CommentAuditReq struct {
-	Status int `json:"status"` // 1=通过 2=垃圾
+	Id     int64 `path:"id"`
+	Status int   `json:"status"` // 1=通过 2=垃圾
+}
+
+type CommentIdReq struct {
+	Id int64 `path:"id"`
+}
+
+type CommentListReq struct {
+	Slug string `path:"slug"`
 }
 
 type CommentListResp struct {
@@ -92,6 +123,8 @@ type CommentListResp struct {
 }
 
 type CommentSaveReq struct {
+	Slug     string `path:"slug"`
+	Nickname string `json:"nickname,optional"` // 游客填；不填则用默认昵称
 	Content  string `json:"content"`
 	ParentId int64  `json:"parentId,optional"`
 }

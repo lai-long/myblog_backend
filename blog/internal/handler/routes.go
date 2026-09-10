@@ -39,6 +39,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: admin.ArticleDeleteHandler(serverCtx),
 			},
 			{
+				Method:  http.MethodGet,
+				Path:    "/comments",
+				Handler: admin.AdminCommentListHandler(serverCtx),
+			},
+			{
 				Method:  http.MethodPut,
 				Path:    "/comments/:id",
 				Handler: admin.CommentAuditHandler(serverCtx),
@@ -108,31 +113,13 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodPost,
-				Path:    "/articles/:slug/view",
-				Handler: interact.ArticleViewHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/v1"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodPost,
 				Path:    "/articles/:slug/comments",
 				Handler: interact.CommentCreateHandler(serverCtx),
 			},
-		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/v1"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
 			{
-				Method:  http.MethodGet,
-				Path:    "/site/config",
-				Handler: public.SiteConfigHandler(serverCtx),
+				Method:  http.MethodPost,
+				Path:    "/articles/:slug/view",
+				Handler: interact.ArticleViewHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/v1"),
@@ -149,6 +136,17 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodGet,
 				Path:    "/articles/:slug",
 				Handler: public.ArticleDetailHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/site/config",
+				Handler: public.SiteConfigHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/v1"),

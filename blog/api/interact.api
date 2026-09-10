@@ -12,12 +12,19 @@ type CommentListResp {
     Total int64     `json:"total"`
 }
 
+// 路径参数必须声明成 Req 类型，否则 goctl 生成的 logic 拿不到 slug
+type CommentListReq {
+    Slug string `path:"slug"`
+}
+
 type CommentSaveReq {
+    Slug     string `path:"slug"`
+    Nickname string `json:"nickname,optional"` // 游客填；不填则用默认昵称
     Content  string `json:"content"`
     ParentId int64  `json:"parentId,optional"`
 }
 
-// 公开：浏览量上报 + 评论列表
+// 公开：游客看评论列表 + 发评论（发完进待审核，管理员通过后才会出现在列表里）
 @server (
     group:  interact
     prefix: /v1
@@ -27,16 +34,8 @@ service blog-api {
     post /articles/:slug/view returns (EmptyResp)
 
     @handler CommentList
-    get /articles/:slug/comments returns (CommentListResp)
-}
+    get /articles/:slug/comments (CommentListReq) returns (CommentListResp)
 
-// 需登录：博主发评论/回复（一期仅管理员）
-@server (
-    jwt:    Auth
-    group:  interact
-    prefix: /v1
-)
-service blog-api {
     @handler CommentCreate
     post /articles/:slug/comments (CommentSaveReq) returns (EmptyResp)
 }

@@ -30,7 +30,36 @@ type UploadResp {
 }
 
 type CommentAuditReq {
-    Status int `json:"status"` // 1=通过 2=垃圾
+    Id     int64 `path:"id"`
+    Status int   `json:"status"` // 1=通过 2=垃圾
+}
+
+// 路径参数必须声明成 Req 类型，否则 goctl 生成的 logic 拿不到 id
+type CommentIdReq {
+    Id int64 `path:"id"`
+}
+
+// 后台评论列表：审核前得先看到有哪些评论
+type AdminCommentListReq {
+    Page   int `form:"page,default=1"`
+    Size   int `form:"size,default=10"`
+    Status int `form:"status,default=-1"` // -1=全部 0=待审核 1=通过 2=垃圾
+}
+
+type AdminComment {
+    Id           int64  `json:"id"`
+    ArticleId    int64  `json:"articleId"`
+    ArticleTitle string `json:"articleTitle"`
+    ParentId     int64  `json:"parentId"`
+    Nickname     string `json:"nickname"`
+    Content      string `json:"content"`
+    Status       int    `json:"status"`
+    CreatedAt    string `json:"createdAt"`
+}
+
+type AdminCommentListResp {
+    List  []AdminComment `json:"list"`
+    Total int64          `json:"total"`
 }
 
 @server (
@@ -61,11 +90,14 @@ service blog-api {
     put /site/config (SiteConfigSaveReq) returns (EmptyResp)
 
     // 评论管理
+    @handler AdminCommentList
+    get /comments (AdminCommentListReq) returns (AdminCommentListResp)
+
     @handler CommentAudit
     put /comments/:id (CommentAuditReq) returns (EmptyResp)
 
     @handler CommentDelete
-    delete /comments/:id returns (EmptyResp)
+    delete /comments/:id (CommentIdReq) returns (EmptyResp)
 
     // 账号设置
     @handler ProfileGet
