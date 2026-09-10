@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"myblog_backend/blog/internal/logic/validate"
 	"myblog_backend/blog/internal/model"
 	"myblog_backend/blog/internal/svc"
 	"myblog_backend/blog/internal/types"
@@ -30,6 +31,10 @@ func NewArticleListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Artic
 }
 
 func (l *ArticleListLogic) ArticleList(req *types.ArticleListReq) (resp *types.ArticleListResp, err error) {
+	if err := validate.Pagination(req.Page, req.Size); err != nil {
+		return nil, err
+	}
+
 	// 游客只看已发布的，status 写死 1，不给外部传的余地
 	published := int64(1)
 	cond := model.ArticleListCond{

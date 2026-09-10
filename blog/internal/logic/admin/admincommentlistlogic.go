@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"myblog_backend/blog/internal/logic/validate"
 	"myblog_backend/blog/internal/model"
 	"myblog_backend/blog/internal/svc"
 	"myblog_backend/blog/internal/types"
@@ -30,6 +31,10 @@ func NewAdminCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *AdminCommentListLogic) AdminCommentList(req *types.AdminCommentListReq) (resp *types.AdminCommentListResp, err error) {
+	if err := validate.Pagination(req.Page, req.Size); err != nil {
+		return nil, err
+	}
+
 	cond := model.AdminCommentListCond{
 		Offset: (req.Page - 1) * req.Size,
 		Size:   req.Size,

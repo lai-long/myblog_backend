@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"myblog_backend/blog/internal/logic/validate"
 	"myblog_backend/blog/internal/model"
 	"myblog_backend/blog/internal/svc"
 	"myblog_backend/blog/internal/types"
@@ -30,6 +31,10 @@ func NewAdminArticleListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *AdminArticleListLogic) AdminArticleList(req *types.AdminArticleListReq) (resp *types.AdminArticleListResp, err error) {
+	if err := validate.Pagination(req.Page, req.Size); err != nil {
+		return nil, err
+	}
+
 	cond := model.ArticleListCond{
 		Offset: (req.Page - 1) * req.Size,
 		Size:   req.Size,
