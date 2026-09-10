@@ -34,6 +34,10 @@ type ArticleDetail struct {
 	PublishedAt string `json:"publishedAt"`
 }
 
+type ArticleDetailReq struct {
+	Slug string `path:"slug"`
+}
+
 type ArticleListReq struct {
 	Page    int    `form:"page,default=1"`
 	Size    int    `form:"size,default=10"`

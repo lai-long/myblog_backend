@@ -27,6 +27,7 @@ type (
 		withSession(session sqlx.Session) ArticleModel
 		FindPage(ctx context.Context, cond ArticleListCond) ([]*Article, error)
 		Count(ctx context.Context, cond ArticleListCond) (int64, error)
+		IncrViews(ctx context.Context, id int64) error
 	}
 
 	customArticleModel struct {
@@ -88,4 +89,11 @@ func (m *customArticleModel) Count(ctx context.Context, cond ArticleListCond) (i
 		return 0, err
 	}
 	return total, nil
+}
+
+// IncrViews 浏览量 +1。用 SQL 自增而不是"读出来+1再写回"，避免并发下互相覆盖
+func (m *customArticleModel) IncrViews(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("UPDATE %s SET `views` = `views` + 1 WHERE `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
+	return err
 }
