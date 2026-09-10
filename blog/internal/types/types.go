@@ -28,6 +28,7 @@ type AdminComment struct {
 	Id           int64  `json:"id"`
 	ArticleId    int64  `json:"articleId"`
 	ArticleTitle string `json:"articleTitle"`
+	ArticleSlug  string `json:"articleSlug"`
 	ParentId     int64  `json:"parentId"`
 	Nickname     string `json:"nickname"`
 	Content      string `json:"content"`
@@ -50,6 +51,7 @@ type ArticleDetail struct {
 	Id          int64  `json:"id"`
 	Title       string `json:"title"`
 	Slug        string `json:"slug"`
+	Summary     string `json:"summary,optional"`
 	Content     string `json:"content"`
 	CoverUrl    string `json:"coverUrl,optional"`
 	Views       int64  `json:"views"`

@@ -61,6 +61,7 @@ func (l *AdminCommentListLogic) AdminCommentList(req *types.AdminCommentListReq)
 			Id:           r.Id,
 			ArticleId:    r.ArticleId,
 			ArticleTitle: r.ArticleTitle,
+			ArticleSlug:  r.ArticleSlug,
 			ParentId:     r.ParentId,
 			Nickname:     r.Nickname,
 			Content:      r.Content,

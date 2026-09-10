@@ -27,6 +27,7 @@ type AdminCommentRow struct {
 	Id           int64     `db:"id"`
 	ArticleId    int64     `db:"article_id"`
 	ArticleTitle string    `db:"article_title"`
+	ArticleSlug  string    `db:"article_slug"`
 	ParentId     int64     `db:"parent_id"`
 	Nickname     string    `db:"nickname"`
 	Content      string    `db:"content"`
@@ -92,7 +93,7 @@ func findAdminWhere(cond AdminCommentListCond) (string, []any) {
 
 func (m *customCommentModel) FindAdminPage(ctx context.Context, cond AdminCommentListCond) ([]*AdminCommentRow, error) {
 	where, args := findAdminWhere(cond)
-	query := fmt.Sprintf("SELECT `c`.`id`, `c`.`article_id`, `a`.`title` AS `article_title`, "+
+	query := fmt.Sprintf("SELECT `c`.`id`, `c`.`article_id`, `a`.`title` AS `article_title`, `a`.`slug` AS `article_slug`, "+
 		"`c`.`parent_id`, `c`.`nickname`, `c`.`content`, `c`.`status`, `c`.`created_at` "+
 		"FROM %s `c` LEFT JOIN %s `a` ON `c`.`article_id` = `a`.`id` %s "+
 		"ORDER BY `c`.`created_at` DESC LIMIT ? OFFSET ?", m.table, articleTable, where)

@@ -50,6 +50,7 @@ type AdminComment {
     Id           int64  `json:"id"`
     ArticleId    int64  `json:"articleId"`
     ArticleTitle string `json:"articleTitle"`
+    ArticleSlug  string `json:"articleSlug"`
     ParentId     int64  `json:"parentId"`
     Nickname     string `json:"nickname"`
     Content      string `json:"content"`

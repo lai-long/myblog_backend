@@ -12,6 +12,7 @@ type ArticleDetail {
     Id          int64  `json:"id"`
     Title       string `json:"title"`
     Slug        string `json:"slug"`
+    Summary     string `json:"summary,optional"`
     Content     string `json:"content"`
     CoverUrl    string `json:"coverUrl,optional"`
     Views       int64  `json:"views"`

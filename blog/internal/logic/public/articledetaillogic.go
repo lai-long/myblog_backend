@@ -53,6 +53,7 @@ func (l *ArticleDetailLogic) ArticleDetail(req *types.ArticleDetailReq) (resp *t
 		Id:          a.Id,
 		Title:       a.Title,
 		Slug:        a.Slug,
+		Summary:     a.Summary,
 		Content:     a.Content,
 		CoverUrl:    a.CoverUrl,
 		Views:       a.Views + 1, // 直接带上刚 +1 的值，前端不用再刷一次
