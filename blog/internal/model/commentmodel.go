@@ -76,14 +76,15 @@ func (m *customCommentModel) FindApprovedByArticleId(ctx context.Context, articl
 	return resp, nil
 }
 
-// findAdminWhere 后台列表的条件，分页和计数共用
+// findAdminWhere 后台列表的条件，分页和计数共用。
+// 列名必须带 `c.` 前缀：article 表也有 status / deleted_at，join 后不写前缀会歧义报错
 func findAdminWhere(cond AdminCommentListCond) (string, []any) {
 	var (
-		where = []string{"`deleted_at` IS NULL"}
+		where = []string{"`c`.`deleted_at` IS NULL"}
 		args  []any
 	)
 	if cond.Status != nil {
-		where = append(where, "`status` = ?")
+		where = append(where, "`c`.`status` = ?")
 		args = append(args, *cond.Status)
 	}
 	return "WHERE " + strings.Join(where, " AND "), args
@@ -106,7 +107,7 @@ func (m *customCommentModel) FindAdminPage(ctx context.Context, cond AdminCommen
 
 func (m *customCommentModel) CountAdmin(ctx context.Context, cond AdminCommentListCond) (int64, error) {
 	where, args := findAdminWhere(cond)
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s %s", m.table, where)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s `c` %s", m.table, where)
 
 	var total int64
 	if err := m.conn.QueryRowCtx(ctx, &total, query, args...); err != nil {
