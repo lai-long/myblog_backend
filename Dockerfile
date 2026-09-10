@@ -4,6 +4,11 @@ FROM golang:1.27-alpine AS builder
 
 WORKDIR /src
 
+# Go 模块代理：默认用国内镜像（proxy.golang.org 在国内不可达），
+# 海外服务器构建时可覆盖：docker compose build --build-arg GOPROXY=https://proxy.golang.org,direct
+ARG GOPROXY=https://goproxy.cn,direct
+ENV GOPROXY=${GOPROXY}
+
 # 先单独拷贝依赖清单并下载，利用 Docker 层缓存（改源码不会触发重新拉依赖）
 COPY go.mod go.sum ./
 RUN go mod download
