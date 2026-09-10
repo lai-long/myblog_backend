@@ -46,6 +46,9 @@ jobs:
         with:
           context: .
           push: true
+          # runner 在海外，覆盖回官方代理（Dockerfile 默认 goproxy.cn 是国内构建用的）
+          build-args: |
+            GOPROXY=https://proxy.golang.org,direct
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
