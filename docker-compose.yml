@@ -1,8 +1,7 @@
 services:
   blog:
-    # 改成你自己的镜像地址（和 build.yml 里 IMAGE 对应）
-    # 例如 Docker Hub: yourname/myblog-backend:main  阿里云 ACR: registry.cn-hangzhou.aliyuncs.com/yourns/myblog-backend:main
-    image: ghcr.io/your-owner/myblog_backend:main
+    # 不走镜像仓库：服务器上 git pull 后本地构建（增量构建有缓存，很快）
+    build: .
     container_name: myblog-backend
     restart: unless-stopped
     ports:
