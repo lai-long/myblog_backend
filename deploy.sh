@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 
 PROD_CONF="blog-api.prod.yaml"
 PORT=8812
-HEALTH_URL="http://127.0.0.1:${PORT}/v1/admin/upload"
+HEALTH_URL="http://127.0.0.1:${PORT}/v1/admin/profile"
 
 info() { printf '\033[1;34m[deploy]\033[0m %s\n' "$*"; }
 err()  { printf '\033[1;31m[deploy]\033[0m %s\n' "$*" >&2; }

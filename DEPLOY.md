@@ -96,7 +96,7 @@ docker compose up -d --build
 
 ```bash
 # 健康检查：未带 token 访问受保护接口应返回统一错误体（不再是空 body）
-curl -s http://127.0.0.1:8812/v1/admin/upload
+curl -s http://127.0.0.1:8812/v1/admin/profile
 # 期望：{"code":40103,"message":"未登录或登录已失效"}
 
 # 查看日志
