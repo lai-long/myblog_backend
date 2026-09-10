@@ -11,17 +11,17 @@
         │
 服务器 git pull
         │
-docker compose up -d --build        # 本地构建镜像并重启
+./deploy.sh  (docker compose up -d --build + 健康检查)
         │
    ┌────┴─────────┐
- blog 容器      RustFS（对象存储）
+ blog 容器      RustFS 容器（对象存储）
  /app/data     图片上传目标
- /app/logs     （独立部署，见 RustFS 文档）
+ /app/logs     由 ./deploy-rustfs.sh 独立部署（一次性）
 ```
 
 - 应用二进制：`blog`（go-zero HTTP 服务，端口 8812）
 - 数据库：SQLite 文件，落在容器 `/app/data/blog.db`，由 volume 持久化
-- 图片：上传到 RustFS（S3 兼容），不在容器里存文件
+- 图片：上传到 RustFS（S3 兼容，9000 端口），不在容器里存文件
 - 建表/迁移：SQL 已 `go:embed` 进二进制，**服务启动时自动幂等执行**，无需单独跑迁移
 
 ---
@@ -30,8 +30,7 @@ docker compose up -d --build        # 本地构建镜像并重启
 
 - 安装 Docker 与 Docker Compose v2、git
 - 2C2G 机器上构建 Go 镜像需要约 1~2GB 内存峰值，**务必先配 1~2GB swap**（zram 亦可），否则构建可能被 OOM kill
-- 开放防火墙 8812（或放在反代/Nginx 后）
-- RustFS 独立部署（不在本 compose 里）：运行 `./deploy-rustfs.sh` 一键完成（起容器 + 建 bucket + 输出要填进 `blog-api.prod.yaml` 的 OSS 配置）
+- 开放防火墙 8812（或放在反代/Nginx 后）；RustFS 控制台 9001 建议仅内网/SSH 隧道访问
 
 ---
 
@@ -44,43 +43,40 @@ git clone <仓库地址> myblog_backend
 cd myblog_backend
 ```
 
-### 3.2 准备生产配置 `blog-api.prod.yaml`
-
-在 `docker-compose.yml` 同级目录创建该文件（已在 `.gitignore` 中，含密钥，禁止提交）：
-
-```yaml
-Name: blog-api
-Host: 0.0.0.0
-Port: 8812
-
-ZeroLog:
-  Path: ../logs/blog.log
-  MaxSize: 100
-  MaxBackups: 14
-  MaxAge: 14
-  Level: info
-
-Auth:
-  AccessSecret: "换成一段随机长字符串(用于 JWT 签名)"   # 生成：openssl rand -hex 32
-  AccessExpire: 7200
-
-SqliteDSN: "../data/blog.db?_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)"
-
-# RustFS / S3 兼容对象存储（图片上传用），以下填你的真实值
-OSS:
-  Endpoint: "https://s3.your-rustfs.com"
-  Region: "us-east-1"
-  Bucket: "myblog"
-  AccessKeyID: "YOUR_ACCESS_KEY"
-  SecretAccessKey: "YOUR_SECRET_KEY"
-  UsePathStyle: true          # 自建 S3 兼容服务保持 true
-  PublicBaseURL: "https://s3.your-rustfs.com/myblog"  # 返回给前端的 URL 前缀
-```
-
-### 3.3 构建并启动
+### 3.2 部署 RustFS（图片存储）
 
 ```bash
-./deploy.sh   # 一键脚本：检查配置 -> 构建启动 -> 健康检查
+./deploy-rustfs.sh
+```
+
+脚本会：随机生成密钥存入 `rustfs.env`（已 gitignore）→ 启动 RustFS 容器（9000 S3 API / 9001 控制台）→ 自动建 `myblog` bucket 并设公开读 → **最后打印一段 OSS 配置，第 3.3 步要用**。
+
+想先跳过图片功能也行：prod 配置里 OSS 用占位值即可，服务照常启动，仅后台上传会报错，之后再补。
+
+### 3.3 准备生产配置 `blog-api.prod.yaml`
+
+先运行一次 `./deploy.sh`——它发现没有 `blog-api.prod.yaml` 时会**自动生成模板**（JWT 密钥已随机填好）并退出。然后编辑该文件，把 3.2 输出的 OSS 配置块粘贴替换占位段：
+
+```bash
+vim blog-api.prod.yaml
+```
+
+```yaml
+# 只有 OSS 段需要填，其余保持模板原样
+OSS:
+  Endpoint: "http://172.17.0.1:9000"    # docker0 网桥地址（blog 容器内 127.0.0.1 指容器自己）
+  Region: "us-east-1"                    # 自建 RustFS 保持不动
+  Bucket: "myblog"
+  AccessKeyID: "<rustfs.env 里的值>"
+  SecretAccessKey: "<rustfs.env 里的值>"
+  UsePathStyle: true                     # 自建服务保持 true
+  PublicBaseURL: "http://<服务器IP或域名>:9000/myblog"  # 浏览器访问图片的地址；上域名后改 https://域名/files/myblog
+```
+
+### 3.4 构建并启动
+
+```bash
+./deploy.sh   # 构建镜像 -> 启动 -> 健康检查（GET /v1/admin/profile 应返回 code=40103）
 ```
 
 或手动执行：
@@ -92,18 +88,20 @@ docker compose up -d --build
 首次构建要联网拉 Go 依赖，耗时几分钟；之后有层缓存，增量构建通常 1 分钟内完成。
 服务启动时会自动执行未应用的数据库迁移（幂等），空 volume 也能直接拉起。
 
-### 3.4 验证
+### 3.5 验证
 
 ```bash
-# 健康检查：未带 token 访问受保护接口应返回统一错误体（不再是空 body）
+# deploy.sh 已内置健康检查；手动验证：
 curl -s http://127.0.0.1:8812/v1/admin/profile
 # 期望：{"code":40103,"message":"未登录或登录已失效"}
+curl -s http://127.0.0.1:8812/v1/articles
+# 期望：{"code":0,"message":"ok","data":{"list":[],"total":0}}
 
 # 查看日志
 docker compose logs -f blog
 ```
 
-### 3.5 初始化管理员账号
+### 3.6 初始化管理员账号
 
 ```bash
 # 本地或服务器上生成密码的 bcrypt 哈希
@@ -151,7 +149,7 @@ git pull        # 拉代码这步你自己做
   ```
 
   建议每日 cron 备份 + 异地存放，保留最近 30 天（见 design.md 5.4）。
-- **密钥**：`blog-api.prod.yaml` 含 OSS Key 与 JWT 密钥，只在服务器存在，不进 git
+- **密钥**：`blog-api.prod.yaml`（OSS Key、JWT 密钥）与 `rustfs.env`（RustFS 管理员密钥）只存在于服务器，均在 `.gitignore` 中，不进 git
 - **HTTPS**：给 RustFS 的 `PublicBaseURL` 配好可公网访问的地址；业务建议放在 Nginx/Caddy 反代后统一加 TLS
 
 ---
@@ -160,6 +158,9 @@ git pull        # 拉代码这步你自己做
 
 - **构建被 kill / 卡死**：2C2G 内存不够，先加 swap 再重试。
 - **构建卡在拉 Go 依赖 / 报 proxy.golang.org 超时**：Dockerfile 默认用国内代理 `goproxy.cn`；海外服务器构建时覆盖：`docker compose build --build-arg GOPROXY=https://proxy.golang.org,direct`。
+- **deploy.sh 提示"已生成 blog-api.prod.yaml"后退出**：这是正常流程——模板已生成（JWT 密钥已随机填好），填入 OSS 真实配置后重跑即可，见 3.3。
+- **deploy.sh 健康检查未就绪但日志显示已启动**：健康探针是 `GET /v1/admin/profile`，期望返回 `code:40103`；先手动 `curl` 该地址确认，再看 `docker compose logs blog`。
+- **改了 rustfs.env 里的密钥**：RustFS 容器创建后密钥已固化在容器里，需 `docker rm -f rustfs` 后重跑 `./deploy-rustfs.sh` 才会生效（数据不丢，存在 ~/rustfs/data）。
 - **首次启动报"表不存在"**：不会。服务启动已自动跑迁移；若你手动换了 DB 文件，确保该 DB 执行过迁移（可用 `go run ./tools/migrate -dsn <path>` 手工补）。
 - **上传图片报 TLS / x509 错误**：镜像已内置 CA 证书；若出现，通常是 `OSS.Endpoint` 配错或网络不通。
 - **`401` 空响应**：已修复，现在返回 `{"code":40103,"message":"未登录或登录已失效"}`。
