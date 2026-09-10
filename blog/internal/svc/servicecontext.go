@@ -15,6 +15,7 @@ type ServiceContext struct {
 	Config       config.Config
 	AdminModel   model.AdminModel
 	ArticleModel model.ArticleModel
+	CommentModel model.CommentModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -23,5 +24,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Config:       c,
 		AdminModel:   model.NewAdminModel(conn),
 		ArticleModel: model.NewArticleModel(conn),
+		CommentModel: model.NewCommentModel(conn),
 	}
 }
