@@ -5,8 +5,11 @@ package main
 
 import (
 	"context"
+
+	"database/sql"
 	"flag"
 	"fmt"
+	"myblog_backend/migrations"
 	"myblog_backend/pkg/logx"
 	"net/http"
 	"strings"
@@ -19,6 +22,7 @@ import (
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/rest/httpx"
+	_ "modernc.org/sqlite"
 )
 
 // body 统一响应体：HTTP 状态码恒为 200，业务成败只看 code
@@ -74,6 +78,16 @@ func main() {
 	if err := logx.Init(c.ZeroLog); err != nil {
 		panic(err)
 	}
+
+	// 启动时自动执行未应用的迁移（幂等），空数据目录也能直接拉起
+	db, err := sql.Open("sqlite", c.SqliteDSN)
+	if err != nil {
+		panic(err)
+	}
+	if err := migrations.Apply(db); err != nil {
+		panic(err)
+	}
+	db.Close()
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
