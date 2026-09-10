@@ -31,7 +31,7 @@ docker compose up -d --build        # 本地构建镜像并重启
 - 安装 Docker 与 Docker Compose v2、git
 - 2C2G 机器上构建 Go 镜像需要约 1~2GB 内存峰值，**务必先配 1~2GB swap**（zram 亦可），否则构建可能被 OOM kill
 - 开放防火墙 8812（或放在反代/Nginx 后）
-- RustFS 独立部署（不在本 compose 里），拿到 endpoint 和 access key 备用
+- RustFS 独立部署（不在本 compose 里）：运行 `./deploy-rustfs.sh` 一键完成（起容器 + 建 bucket + 输出要填进 `blog-api.prod.yaml` 的 OSS 配置）
 
 ---
 
