@@ -14,3 +14,13 @@ Auth:
   AccessExpire: 7200
 
 SqliteDSN: "../data/blog.db?_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)"
+
+# RustFS / S3 兼容对象存储（图片上传用）
+OSS:
+  Endpoint: "https://s3.example.com"
+  Region: "us-east-1"
+  Bucket: "myblog"
+  AccessKeyID: "1234"
+  SecretAccessKey: "1234"
+  UsePathStyle: true
+  PublicBaseURL: "https://s3.example.com/myblog"
