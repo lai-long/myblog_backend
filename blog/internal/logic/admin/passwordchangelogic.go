@@ -5,7 +5,6 @@ package admin
 
 import (
 	"context"
-	"encoding/json"
 
 	"myblog_backend/blog/internal/svc"
 	"myblog_backend/blog/internal/types"
@@ -34,14 +33,7 @@ func (l *PasswordChangeLogic) PasswordChange(req *types.PasswordReq) (resp *type
 		return nil, errx.New(errx.ParamError, "新密码至少 6 位")
 	}
 
-	// JWT 中间件把 claims 放进 context；go-zero 用 WithJSONNumber 解析，数字是 json.Number
-	var uid int64
-	switch v := l.ctx.Value("uid").(type) {
-	case json.Number:
-		uid, _ = v.Int64()
-	case float64:
-		uid = int64(v)
-	}
+	uid := uidFromCtx(l.ctx)
 	if uid <= 0 {
 		return nil, errx.New(errx.TokenInvalid, "无法识别登录身份")
 	}

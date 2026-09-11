@@ -8,6 +8,7 @@ import (
 
 	"myblog_backend/blog/internal/svc"
 	"myblog_backend/blog/internal/types"
+	"myblog_backend/pkg/errx"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,7 +28,21 @@ func NewProfileSaveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Profi
 }
 
 func (l *ProfileSaveLogic) ProfileSave(req *types.ProfileSaveReq) (resp *types.EmptyResp, err error) {
-	// todo: add your logic here and delete this line
+	uid := uidFromCtx(l.ctx)
+	if uid <= 0 {
+		return nil, errx.New(errx.TokenInvalid, "无法识别登录身份")
+	}
 
-	return
+	admin, err := l.svcCtx.AdminModel.FindOne(l.ctx, uid)
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "查询用户失败")
+	}
+
+	admin.Nickname = req.Nickname
+	admin.AvatarUrl = req.AvatarUrl
+	if err := l.svcCtx.AdminModel.Update(l.ctx, admin); err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "保存失败")
+	}
+
+	return &types.EmptyResp{}, nil
 }
