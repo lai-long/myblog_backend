@@ -54,7 +54,10 @@ func (l *ArticleCreateLogic) ArticleCreate(req *types.ArticleSaveReq) (resp *typ
 		return nil, errx.Wrap(err, errx.ServerError, "创建文章失败")
 	}
 
-	// 3. 标签：按名字找或建，再整体替换关联
+	// 3. 标签：没传就跳过；传了则按名字找或建，再关联
+	if req.Tags == nil {
+		return &types.EmptyResp{}, nil
+	}
 	articleId, err := res.LastInsertId()
 	if err != nil {
 		return nil, errx.Wrap(err, errx.ServerError, "获取新文章 id 失败")
