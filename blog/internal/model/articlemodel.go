@@ -17,6 +17,7 @@ var _ ArticleModel = (*customArticleModel)(nil)
 type ArticleListCond struct {
 	Status  *int64
 	Keyword string
+	TagSlug string // 非空时按标签 slug 过滤
 	Offset  int
 	Size    int
 }
@@ -63,6 +64,12 @@ func buildListWhere(cond ArticleListCond) (string, []any) {
 		where = append(where, "(`title` LIKE ? OR `content` LIKE ?)")
 		kw := "%" + cond.Keyword + "%"
 		args = append(args, kw, kw)
+	}
+	if cond.TagSlug != "" {
+		// EXISTS 子查询过滤：不动主查询的 FROM，避免 JOIN 引入重复行
+		where = append(where, "EXISTS (SELECT 1 FROM article_tag at JOIN tag t ON t.id = at.tag_id "+
+			"WHERE at.article_id = "+articleTable+".`id` AND t.slug = ?)")
+		args = append(args, cond.TagSlug)
 	}
 	if len(where) == 0 {
 		return "", nil
@@ -136,7 +143,7 @@ func (m *customArticleModel) Update(ctx context.Context, data *Article) error {
 		"WHERE `id` = ? AND `deleted_at` IS NULL", m.table)
 	_, err := m.conn.ExecCtx(ctx, query,
 		data.Title, data.Slug, data.Summary, data.Content, data.CoverUrl,
-		data.Status, data.Views, data.PublishedAt, data.UpdatedAt, data.Id)
+		data.Status, data.Views, data.PublishedAt.UTC().Format(time.RFC3339), data.UpdatedAt, data.Id)
 	return err
 }
 

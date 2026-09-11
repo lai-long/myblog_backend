@@ -1,28 +1,36 @@
+type TagVo {
+    Name string `json:"name"`
+    Slug string `json:"slug"`
+}
+
 type ArticleSummary {
-    Id          int64  `json:"id"`
-    Title       string `json:"title"`
-    Slug        string `json:"slug"`
-    Summary     string `json:"summary,optional"`
-    CoverUrl    string `json:"coverUrl,optional"`
-    Views       int64  `json:"views"`
-    PublishedAt string `json:"publishedAt"`
+    Id          int64   `json:"id"`
+    Title       string  `json:"title"`
+    Slug        string  `json:"slug"`
+    Summary     string  `json:"summary,optional"`
+    CoverUrl    string  `json:"coverUrl,optional"`
+    Views       int64   `json:"views"`
+    PublishedAt string  `json:"publishedAt"`
+    Tags        []TagVo `json:"tags"`
 }
 
 type ArticleDetail {
     Id          int64  `json:"id"`
     Title       string `json:"title"`
     Slug        string `json:"slug"`
-    Summary     string `json:"summary,optional"`
-    Content     string `json:"content"`
-    CoverUrl    string `json:"coverUrl,optional"`
-    Views       int64  `json:"views"`
-    PublishedAt string `json:"publishedAt"`
+    Summary     string  `json:"summary,optional"`
+    Content     string  `json:"content"`
+    CoverUrl    string  `json:"coverUrl,optional"`
+    Views       int64   `json:"views"`
+    PublishedAt string  `json:"publishedAt"`
+    Tags        []TagVo `json:"tags"`
 }
 
 type ArticleListReq {
     Page    int    `form:"page,default=1"`
     Size    int    `form:"size,default=10"`
     Keyword string `form:"keyword,optional"`
+    Tag     string `form:"tag,optional"` // 按标签 slug 过滤
 }
 
 type ArticleListResp {
@@ -41,8 +49,9 @@ type ArticleSaveReq {
     Slug     string `json:"slug"`
     Summary  string `json:"summary,optional"`
     Content  string `json:"content"`
-    CoverUrl string `json:"coverUrl,optional"`
-    Status   int    `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+    CoverUrl string   `json:"coverUrl,optional"`
+    Status   int      `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+    Tags     []string `json:"tags,optional"`    // 标签名列表；不存在的标签自动创建
 }
 
 @server (

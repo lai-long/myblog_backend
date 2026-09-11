@@ -1,0 +1,19 @@
+type TagWithCount {
+    Name  string `json:"name"`
+    Slug  string `json:"slug"`
+    Count int64  `json:"count"` // 该标签下已发布文章数
+}
+
+type TagListResp {
+    List []TagWithCount `json:"list"`
+}
+
+@server (
+    group:  public
+    prefix: /v1
+)
+service blog-api {
+    // 标签墙：全部标签 + 文章数
+    @handler TagList
+    get /tags returns (TagListResp)
+}

@@ -61,5 +61,18 @@ func (l *ArticleUpdateLogic) ArticleUpdate(req *types.ArticleSaveReq) (resp *typ
 		return nil, errx.Wrap(err, errx.ServerError, "更新文章失败")
 	}
 
+	// 4. 标签：按名字找或建，再整体替换关联
+	tags, err := l.svcCtx.TagModel.FindOrCreate(l.ctx, req.Tags)
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "保存标签失败")
+	}
+	ids := make([]int64, 0, len(tags))
+	for _, t := range tags {
+		ids = append(ids, t.Id)
+	}
+	if err := l.svcCtx.TagModel.SetArticleTags(l.ctx, req.Id, ids); err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "关联标签失败")
+	}
+
 	return &types.EmptyResp{}, nil
 }

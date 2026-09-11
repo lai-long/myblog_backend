@@ -40,6 +40,7 @@ func (l *ArticleListLogic) ArticleList(req *types.ArticleListReq) (resp *types.A
 	cond := model.ArticleListCond{
 		Status:  &published,
 		Keyword: req.Keyword,
+		TagSlug: req.Tag,
 		Offset:  (req.Page - 1) * req.Size,
 		Size:    req.Size,
 	}
@@ -55,6 +56,16 @@ func (l *ArticleListLogic) ArticleList(req *types.ArticleListReq) (resp *types.A
 		return nil, errx.Wrap(err, errx.ServerError, "查询文章总数失败")
 	}
 
+	// 批量取这一页文章的标签（一次 SQL，避免 N+1）
+	ids := make([]int64, 0, len(articles))
+	for _, a := range articles {
+		ids = append(ids, a.Id)
+	}
+	tagMap, err := l.svcCtx.TagModel.FindByArticleIds(l.ctx, ids)
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "查询文章标签失败")
+	}
+
 	list := make([]types.ArticleSummary, 0, len(articles))
 	for _, a := range articles {
 		list = append(list, types.ArticleSummary{
@@ -65,6 +76,7 @@ func (l *ArticleListLogic) ArticleList(req *types.ArticleListReq) (resp *types.A
 			CoverUrl:    a.CoverUrl,
 			Views:       a.Views,
 			PublishedAt: a.PublishedAt.Format(time.RFC3339), // 带时区，前端 new Date() 才能解析对
+			Tags:        toTagVos(tagMap[a.Id]),
 		})
 	}
 

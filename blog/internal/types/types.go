@@ -48,14 +48,15 @@ type AdminCommentListResp struct {
 }
 
 type ArticleDetail struct {
-	Id          int64  `json:"id"`
-	Title       string `json:"title"`
-	Slug        string `json:"slug"`
-	Summary     string `json:"summary,optional"`
-	Content     string `json:"content"`
-	CoverUrl    string `json:"coverUrl,optional"`
-	Views       int64  `json:"views"`
-	PublishedAt string `json:"publishedAt"`
+	Id          int64   `json:"id"`
+	Title       string  `json:"title"`
+	Slug        string  `json:"slug"`
+	Summary     string  `json:"summary,optional"`
+	Content     string  `json:"content"`
+	CoverUrl    string  `json:"coverUrl,optional"`
+	Views       int64   `json:"views"`
+	PublishedAt string  `json:"publishedAt"`
+	Tags        []TagVo `json:"tags"`
 }
 
 type ArticleDetailReq struct {
@@ -70,6 +71,7 @@ type ArticleListReq struct {
 	Page    int    `form:"page,default=1"`
 	Size    int    `form:"size,default=10"`
 	Keyword string `form:"keyword,optional"`
+	Tag     string `form:"tag,optional"` // 按标签 slug 过滤
 }
 
 type ArticleListResp struct {
@@ -78,23 +80,25 @@ type ArticleListResp struct {
 }
 
 type ArticleSaveReq struct {
-	Id       int64  `json:"id,optional" path:"id"` // 更新走路径参数，新建不带
-	Title    string `json:"title"`
-	Slug     string `json:"slug"`
-	Summary  string `json:"summary,optional"`
-	Content  string `json:"content"`
-	CoverUrl string `json:"coverUrl,optional"`
-	Status   int    `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+	Id       int64    `json:"id,optional" path:"id"` // 更新走路径参数，新建不带
+	Title    string   `json:"title"`
+	Slug     string   `json:"slug"`
+	Summary  string   `json:"summary,optional"`
+	Content  string   `json:"content"`
+	CoverUrl string   `json:"coverUrl,optional"`
+	Status   int      `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+	Tags     []string `json:"tags,optional"`    // 标签名列表；不存在的标签自动创建
 }
 
 type ArticleSummary struct {
-	Id          int64  `json:"id"`
-	Title       string `json:"title"`
-	Slug        string `json:"slug"`
-	Summary     string `json:"summary,optional"`
-	CoverUrl    string `json:"coverUrl,optional"`
-	Views       int64  `json:"views"`
-	PublishedAt string `json:"publishedAt"`
+	Id          int64   `json:"id"`
+	Title       string  `json:"title"`
+	Slug        string  `json:"slug"`
+	Summary     string  `json:"summary,optional"`
+	CoverUrl    string  `json:"coverUrl,optional"`
+	Views       int64   `json:"views"`
+	PublishedAt string  `json:"publishedAt"`
+	Tags        []TagVo `json:"tags"`
 }
 
 type Comment struct {
@@ -171,6 +175,21 @@ type SiteConfigSaveReq struct {
 	SiteTitle string `json:"siteTitle,optional"`
 	Icp       string `json:"icp,optional"`
 	GithubUrl string `json:"githubUrl,optional"`
+}
+
+type TagListResp struct {
+	List []TagWithCount `json:"list"`
+}
+
+type TagVo struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
+type TagWithCount struct {
+	Name  string `json:"name"`
+	Slug  string `json:"slug"`
+	Count int64  `json:"count"` // 该标签下已发布文章数
 }
 
 type UploadResp struct {

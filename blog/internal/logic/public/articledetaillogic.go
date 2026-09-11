@@ -49,6 +49,11 @@ func (l *ArticleDetailLogic) ArticleDetail(req *types.ArticleDetailReq) (resp *t
 		l.Errorf("浏览量自增失败 id=%d: %v", a.Id, err)
 	}
 
+	tags, err := l.svcCtx.TagModel.FindByArticleIds(l.ctx, []int64{a.Id})
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "查询文章标签失败")
+	}
+
 	return &types.ArticleDetail{
 		Id:          a.Id,
 		Title:       a.Title,
@@ -58,5 +63,15 @@ func (l *ArticleDetailLogic) ArticleDetail(req *types.ArticleDetailReq) (resp *t
 		CoverUrl:    a.CoverUrl,
 		Views:       a.Views + 1, // 直接带上刚 +1 的值，前端不用再刷一次
 		PublishedAt: a.PublishedAt.Format(time.RFC3339),
+		Tags:        toTagVos(tags[a.Id]),
 	}, nil
+}
+
+// toTagVos model 层 Tag 转契约层 TagVo
+func toTagVos(tags []model.Tag) []types.TagVo {
+	vos := make([]types.TagVo, 0, len(tags))
+	for _, t := range tags {
+		vos = append(vos, types.TagVo{Name: t.Name, Slug: t.Slug})
+	}
+	return vos
 }

@@ -41,7 +41,7 @@ func (l *ArticleCreateLogic) ArticleCreate(req *types.ArticleSaveReq) (resp *typ
 	}
 
 	// 2. 入库。id / created_at / updated_at 由数据库填，published_at 我们自己给
-	_, err = l.svcCtx.ArticleModel.Insert(l.ctx, &model.Article{
+	res, err := l.svcCtx.ArticleModel.Insert(l.ctx, &model.Article{
 		Title:       req.Title,
 		Slug:        req.Slug,
 		Summary:     req.Summary,
@@ -54,5 +54,30 @@ func (l *ArticleCreateLogic) ArticleCreate(req *types.ArticleSaveReq) (resp *typ
 		return nil, errx.Wrap(err, errx.ServerError, "创建文章失败")
 	}
 
+	// 3. 标签：按名字找或建，再整体替换关联
+	articleId, err := res.LastInsertId()
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "获取新文章 id 失败")
+	}
+	if err := l.saveTags(req.Tags, articleId); err != nil {
+		return nil, err
+	}
+
 	return &types.EmptyResp{}, nil
+}
+
+// saveTags 解析标签名（不存在自动创建）并整体替换文章关联；create/update 共用
+func (l *ArticleCreateLogic) saveTags(names []string, articleId int64) error {
+	tags, err := l.svcCtx.TagModel.FindOrCreate(l.ctx, names)
+	if err != nil {
+		return errx.Wrap(err, errx.ServerError, "保存标签失败")
+	}
+	ids := make([]int64, 0, len(tags))
+	for _, t := range tags {
+		ids = append(ids, t.Id)
+	}
+	if err := l.svcCtx.TagModel.SetArticleTags(l.ctx, articleId, ids); err != nil {
+		return errx.Wrap(err, errx.ServerError, "关联标签失败")
+	}
+	return nil
 }
