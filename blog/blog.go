@@ -92,6 +92,7 @@ func main() {
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
 	handler.RegisterFeedRoutes(server, ctx) // RSS / sitemap：原始 XML，不走统一 JSON 包装
+	handler.RegisterVisitRoutes(server, ctx) // 浏览上报：需要 *http.Request 取客户端 IP
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	server.Start()

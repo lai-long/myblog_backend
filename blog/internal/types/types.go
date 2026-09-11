@@ -135,6 +135,12 @@ type CommentSaveReq struct {
 	ParentId int64  `json:"parentId,optional"`
 }
 
+type DayStat struct {
+	Date string `json:"date"`
+	Pv   int64  `json:"pv"`
+	Uv   int64  `json:"uv"`
+}
+
 type EmptyResp struct {
 }
 
@@ -194,4 +200,12 @@ type TagWithCount struct {
 
 type UploadResp struct {
 	Url string `json:"url"`
+}
+
+type VisitStatsResp struct {
+	TodayPv int64     `json:"todayPv"`
+	TodayUv int64     `json:"todayUv"`
+	TotalPv int64     `json:"totalPv"`
+	TotalUv int64     `json:"totalUv"`
+	Trend   []DayStat `json:"trend"` // 最近 7 天，按日期升序
 }

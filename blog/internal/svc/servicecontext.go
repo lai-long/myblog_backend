@@ -19,6 +19,7 @@ type ServiceContext struct {
 	CommentModel  model.CommentModel
 	TagModel      *model.TagModel
 	SettingsModel *model.SettingsModel
+	VisitModel    *model.VisitModel
 	OSS           *oss.Client
 }
 
@@ -46,6 +47,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		CommentModel:  model.NewCommentModel(conn),
 		TagModel:      model.NewTagModel(conn),
 		SettingsModel: model.NewSettingsModel(conn),
+		VisitModel:    model.NewVisitModel(conn),
 		OSS:           ossClient,
 	}
 }

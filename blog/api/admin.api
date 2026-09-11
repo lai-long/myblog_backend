@@ -109,4 +109,22 @@ service blog-api {
 
     @handler PasswordChange
     put /password (PasswordReq) returns (EmptyResp)
+
+    // 访问统计
+    @handler VisitStats
+    get /stats returns (VisitStatsResp)
+}
+// 访问统计：PV=页面浏览次数（每次浏览一行），UV=按 天+IP哈希 去重的访客数
+type DayStat {
+    Date string `json:"date"`
+    Pv   int64  `json:"pv"`
+    Uv   int64  `json:"uv"`
+}
+
+type VisitStatsResp {
+    TodayPv int64     `json:"todayPv"`
+    TodayUv int64     `json:"todayUv"`
+    TotalPv int64     `json:"totalPv"`
+    TotalUv int64     `json:"totalUv"`
+    Trend   []DayStat `json:"trend"` // 最近 7 天，按日期升序
 }
