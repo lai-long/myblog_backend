@@ -45,6 +45,7 @@ type (
 		Content     string       `db:"content"`
 		CoverUrl    string       `db:"cover_url"`
 		Status      int64        `db:"status"`
+		IsTop       int64        `db:"is_top"`
 		Views       int64        `db:"views"`
 		PublishedAt time.Time    `db:"published_at"`
 		CreatedAt   time.Time    `db:"created_at"`
@@ -95,8 +96,9 @@ func (m *defaultArticleModel) FindOneBySlug(ctx context.Context, slug string) (*
 }
 
 func (m *defaultArticleModel) Insert(ctx context.Context, data *Article) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, articleRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Title, data.Slug, data.Summary, data.Content, data.CoverUrl, data.Status, data.Views, data.PublishedAt, data.DeletedAt)
+	// 字段随 Article 结构体走（RawFieldNames 反射），手写占位符和参数要同步
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, articleRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Title, data.Slug, data.Summary, data.Content, data.CoverUrl, data.Status, data.IsTop, data.Views, data.PublishedAt, data.DeletedAt)
 	return ret, err
 }
 

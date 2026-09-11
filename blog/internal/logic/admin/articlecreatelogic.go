@@ -48,6 +48,7 @@ func (l *ArticleCreateLogic) ArticleCreate(req *types.ArticleSaveReq) (resp *typ
 		Content:     req.Content,
 		CoverUrl:    req.CoverUrl,
 		Status:      int64(req.Status), // .api 里是 int，model 是 int64，必须显式转
+		IsTop:      int64(isTopOrZero(req.IsTop)),
 		PublishedAt: time.Now().UTC(),  // 全库统一存 UTC：SQLite 的 CURRENT_TIMESTAMP 也是 UTC，两边才对得上
 	})
 	if err != nil {
@@ -83,4 +84,12 @@ func (l *ArticleCreateLogic) saveTags(names []string, articleId int64) error {
 		return errx.Wrap(err, errx.ServerError, "关联标签失败")
 	}
 	return nil
+}
+
+// isTopOrZero 可空指针转 int（nil 按不置顶处理）
+func isTopOrZero(p *int) int {
+	if p == nil {
+		return 0
+	}
+	return *p
 }

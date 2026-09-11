@@ -56,6 +56,9 @@ func (l *ArticleUpdateLogic) ArticleUpdate(req *types.ArticleSaveReq) (resp *typ
 	data.Content = req.Content
 	data.CoverUrl = req.CoverUrl
 	data.Status = int64(req.Status)
+	if req.IsTop != nil {
+		data.IsTop = int64(*req.IsTop) // 指针：不传=保持原置顶状态，避免写作页保存误清
+	}
 
 	if err := l.svcCtx.ArticleModel.Update(l.ctx, &data); err != nil {
 		return nil, errx.Wrap(err, errx.ServerError, "更新文章失败")

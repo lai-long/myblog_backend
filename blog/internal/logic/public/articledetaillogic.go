@@ -62,6 +62,7 @@ func (l *ArticleDetailLogic) ArticleDetail(req *types.ArticleDetailReq) (resp *t
 		Content:     a.Content,
 		CoverUrl:    a.CoverUrl,
 		Views:       a.Views + 1, // 直接带上刚 +1 的值，前端不用再刷一次
+		IsTop:       int(a.IsTop),
 		PublishedAt: a.PublishedAt.Format(time.RFC3339),
 		Tags:        toTagVos(tags[a.Id]),
 	}, nil

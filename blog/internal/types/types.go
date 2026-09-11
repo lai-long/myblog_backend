@@ -20,6 +20,7 @@ type AdminArticleSummary struct {
 	Slug        string `json:"slug"`
 	Status      int    `json:"status"`
 	Views       int64  `json:"views"`
+	IsTop       int    `json:"isTop"`
 	PublishedAt string `json:"publishedAt"`
 	UpdatedAt   string `json:"updatedAt"`
 }
@@ -55,6 +56,7 @@ type ArticleDetail struct {
 	Content     string  `json:"content"`
 	CoverUrl    string  `json:"coverUrl,optional"`
 	Views       int64   `json:"views"`
+	IsTop       int     `json:"isTop"`
 	PublishedAt string  `json:"publishedAt"`
 	Tags        []TagVo `json:"tags"`
 }
@@ -87,6 +89,7 @@ type ArticleSaveReq struct {
 	Content  string   `json:"content"`
 	CoverUrl string   `json:"coverUrl,optional"`
 	Status   int      `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+	IsTop    *int     `json:"isTop,optional"`   // 1=置顶 0=取消；不传=不动（避免写作页保存误清置顶）
 	Tags     []string `json:"tags,optional"`    // 标签名列表；不存在的标签自动创建
 }
 
@@ -97,6 +100,7 @@ type ArticleSummary struct {
 	Summary     string  `json:"summary,optional"`
 	CoverUrl    string  `json:"coverUrl,optional"`
 	Views       int64   `json:"views"`
+	IsTop       int     `json:"isTop"`
 	PublishedAt string  `json:"publishedAt"`
 	Tags        []TagVo `json:"tags"`
 }

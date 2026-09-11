@@ -75,6 +75,7 @@ func (l *ArticleListLogic) ArticleList(req *types.ArticleListReq) (resp *types.A
 			Summary:     a.Summary,
 			CoverUrl:    a.CoverUrl,
 			Views:       a.Views,
+			IsTop:       int(a.IsTop),
 			PublishedAt: a.PublishedAt.Format(time.RFC3339), // 带时区，前端 new Date() 才能解析对
 			Tags:        toTagVos(tagMap[a.Id]),
 		})

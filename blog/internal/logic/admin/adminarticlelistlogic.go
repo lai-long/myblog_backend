@@ -63,6 +63,7 @@ func (l *AdminArticleListLogic) AdminArticleList(req *types.AdminArticleListReq)
 			Slug:        a.Slug,
 			Status:      int(a.Status),
 			Views:       a.Views,
+			IsTop:       int(a.IsTop),
 			PublishedAt: a.PublishedAt.Format(time.RFC3339), // 带时区，前端 new Date() 才能解析对
 			UpdatedAt:   a.UpdatedAt.Format(time.RFC3339),
 		})

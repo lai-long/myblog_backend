@@ -80,13 +80,41 @@ func applyOne(db *sql.DB, name, text string) error {
 	return tx.Commit()
 }
 
-// splitStmts 按分号切分。迁移文件都是简单 DDL，字符串里不含分号，按 ; 切足够。
+// splitStmts 按分号切分，但触发器 BEGIN...END 块内部的分号不切（块里是多条语句）。
+// 规则：逐段扫描，BEGIN 计数大于 END 计数时说明还在块内，继续累积。
 func splitStmts(text string) []string {
 	out := make([]string, 0)
-	for _, p := range strings.Split(text, ";") {
-		if s := strings.TrimSpace(p); s != "" {
+	depth := 0
+	start := 0
+	for i := 0; i < len(text); i++ {
+		if text[i] != ';' {
+			continue
+		}
+		// 数一下 start..i 之间新出现的 BEGIN / END（按整词匹配，注释里不会有）
+		depth += countWord(text[start:i], "BEGIN") - countWord(text[start:i], "END")
+		if depth > 0 {
+			continue // 在触发器块内，分号不切
+		}
+		if s := strings.TrimSpace(text[start:i]); s != "" {
 			out = append(out, s)
 		}
+		start = i + 1
+	}
+	if s := strings.TrimSpace(text[start:]); s != "" {
+		out = append(out, s)
 	}
 	return out
+}
+
+// countWord 统计整词出现次数（大小写不敏感）
+func countWord(s, word string) int {
+	n := 0
+	for _, tok := range strings.FieldsFunc(s, func(r rune) bool {
+		return r == ' ' || r == '\t' || r == '\n' || r == '\r' || r == '(' || r == ')'
+	}) {
+		if strings.EqualFold(tok, word) {
+			n++
+		}
+	}
+	return n
 }

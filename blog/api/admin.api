@@ -16,6 +16,7 @@ type AdminArticleSummary {
     Slug        string `json:"slug"`
     Status      int    `json:"status"`
     Views       int64  `json:"views"`
+    IsTop       int    `json:"isTop"`
     PublishedAt string `json:"publishedAt"`
     UpdatedAt   string `json:"updatedAt"`
 }
