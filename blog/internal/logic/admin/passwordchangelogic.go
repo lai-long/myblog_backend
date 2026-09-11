@@ -5,9 +5,12 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 
 	"myblog_backend/blog/internal/svc"
 	"myblog_backend/blog/internal/types"
+	"myblog_backend/pkg/errx"
+	"myblog_backend/pkg/pwd"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,7 +30,40 @@ func NewPasswordChangeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Pa
 }
 
 func (l *PasswordChangeLogic) PasswordChange(req *types.PasswordReq) (resp *types.EmptyResp, err error) {
-	// todo: add your logic here and delete this line
+	if len(req.NewPassword) < 6 {
+		return nil, errx.New(errx.ParamError, "新密码至少 6 位")
+	}
 
-	return
+	// JWT 中间件把 claims 放进 context；go-zero 用 WithJSONNumber 解析，数字是 json.Number
+	var uid int64
+	switch v := l.ctx.Value("uid").(type) {
+	case json.Number:
+		uid, _ = v.Int64()
+	case float64:
+		uid = int64(v)
+	}
+	if uid <= 0 {
+		return nil, errx.New(errx.TokenInvalid, "无法识别登录身份")
+	}
+
+	admin, err := l.svcCtx.AdminModel.FindOne(l.ctx, uid)
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "查询用户失败")
+	}
+
+	// 旧密码校验：不对就按登录失败处理，不暴露"用户存在但密码错"之外的信息
+	if !pwd.Compare(admin.PasswordHash, req.OldPassword) {
+		return nil, errx.ErrLoginFailed
+	}
+
+	hash, err := pwd.Hash(req.NewPassword)
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "密码加密失败")
+	}
+	admin.PasswordHash = hash
+	if err := l.svcCtx.AdminModel.Update(l.ctx, admin); err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "密码更新失败")
+	}
+
+	return &types.EmptyResp{}, nil
 }
