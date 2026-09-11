@@ -37,8 +37,13 @@ if [[ -r /proc/meminfo ]]; then
 fi
 
 # ---- 3. 构建并启动 ----
-info "构建镜像并启动（首次需拉依赖，耗时几分钟；之后有缓存）..."
-docker compose up -d --build
+# 限制只用 0 号核：2C2G 机器全核编译会打满 CPU，SSH 都会卡死。
+# 镜像名与 compose 默认命名（项目目录名-服务名）一致，up -d 会直接复用，不会二次构建
+info "构建镜像（单核，首次需拉依赖耗时几分钟；之后有缓存）..."
+docker build --cpuset-cpus=0 -t myblog_backend-blog:latest .
+
+info "启动容器..."
+docker compose up -d
 
 # ---- 4. 健康检查：未带 token 访问受保护接口，应返回统一错误体 code=40103 ----
 info "等待服务就绪..."
