@@ -1,6 +1,6 @@
 # 部署文档
 
-个人博客后端（go-zero + SQLite + RustFS）的部署说明。整体策略：**不走镜像仓库——服务器上 git pull 拉代码，本地 `docker compose build` 构建运行**。
+个人博客后端（go-zero + SQLite + RustFS）的部署说明。整体策略：**不走镜像仓库**——日常更新推荐 `./deploy-local.sh`（本机构建镜像传到服务器，避免 2C2G 服务器构建 OOM）；也可在服务器上 git pull 后 `./deploy.sh` 本机构建。
 
 ---
 
@@ -117,13 +117,21 @@ go run ./tools/adminhashpwd '你的密码'
 
 ## 4. 日常更新流程
 
+**推荐：本地构建**（在笔记本上执行；2C2G 服务器上跑 go build 容易 OOM 卡死）：
+
+```bash
+./deploy-local.sh    # 本机构建镜像 → 传到服务器加载 → 重启容器 → 健康检查
+```
+
+备用：服务器上直接构建（机器内存充裕时可用）：
+
 ```bash
 cd myblog_backend
 git pull        # 拉代码这步你自己做
 ./deploy.sh     # 构建 + 启动 + 健康检查
 ```
 
-回滚：`git checkout <旧 commit>` 后直接 `./deploy.sh`。
+回滚：`git checkout <旧 commit>` 后用上述任一方式重新部署。
 
 > 注意：数据库迁移是单向的（只有 up 没有 down），回滚代码前确认旧代码兼容新表结构；一期表结构变更少，一般无碍。
 
