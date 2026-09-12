@@ -41,6 +41,8 @@
 ```bash
 git clone <仓库地址> myblog_backend
 cd myblog_backend
+# 前后端共享的 docker 网络（nginx 用容器名 myblog-backend 直连本服务），一次性创建
+docker network create blog-net
 ```
 
 ### 3.2 部署 RustFS（图片存储）

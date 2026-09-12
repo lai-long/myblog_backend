@@ -1,11 +1,13 @@
 services:
   blog:
-    # 不走镜像仓库：服务器上 git pull 后本地构建（增量构建有缓存，很快）
+    # 不走镜像仓库：本地构建镜像传服务器（deploy-local.sh），或服务器上 deploy.sh 构建
     build: .
     container_name: myblog-backend
     restart: unless-stopped
     ports:
       - "8812:8812"
+    networks:
+      - blog-net    # 与前端同一网络，nginx 用容器名直连，不绕宿主机网关
     volumes:
       # SQLite 数据文件（容器里 ../data -> /app/data）
       - blog-data:/app/data
@@ -17,3 +19,7 @@ services:
 volumes:
   blog-data:
   blog-logs:
+
+networks:
+  blog-net:
+    external: true  # 首次部署先 docker network create blog-net，前后端共用

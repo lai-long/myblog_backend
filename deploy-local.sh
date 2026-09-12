@@ -20,7 +20,7 @@ echo "==> 传输镜像到 $SERVER 并加载"
 docker save "$IMAGE" | gzip | ssh "$SERVER" "gunzip | docker load"
 
 echo "==> 服务器上重建容器"
-ssh "$SERVER" "cd $REMOTE_DIR && { git pull || echo '!! git pull 失败，跳过（不影响部署）'; } && docker compose up -d"
+ssh "$SERVER" "docker network create blog-net 2>/dev/null; cd $REMOTE_DIR && { git pull || echo '!! git pull 失败，跳过（不影响部署）'; } && docker compose up -d"
 
 echo "==> 健康检查"
 sleep 3
