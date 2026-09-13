@@ -29,7 +29,7 @@ func NewArticleUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Art
 	}
 }
 
-func (l *ArticleUpdateLogic) ArticleUpdate(req *types.ArticleSaveReq) (resp *types.EmptyResp, err error) {
+func (l *ArticleUpdateLogic) ArticleUpdate(req *types.ArticleUpdateReq) (resp *types.EmptyResp, err error) {
 	// 1. 先取原记录：views / published_at / created_at 都得以它为准，不能被覆盖
 	old, err := l.svcCtx.ArticleModel.FindOne(l.ctx, req.Id)
 	if err != nil {

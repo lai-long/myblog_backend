@@ -82,7 +82,6 @@ type ArticleListResp struct {
 }
 
 type ArticleSaveReq struct {
-	Id       int64    `json:"id,optional" path:"id"` // 更新走路径参数，新建不带
 	Title    string   `json:"title"`
 	Slug     string   `json:"slug"`
 	Summary  string   `json:"summary,optional"`
@@ -91,6 +90,18 @@ type ArticleSaveReq struct {
 	Status   int      `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
 	IsTop    *int     `json:"isTop,optional"`   // 1=置顶 0=取消；不传=不动（避免写作页保存误清置顶）
 	Tags     []string `json:"tags,optional"`    // 标签名列表；不存在的标签自动创建
+}
+
+type ArticleUpdateReq struct {
+	Id       int64    `path:"id"`
+	Title    string   `json:"title"`
+	Slug     string   `json:"slug"`
+	Summary  string   `json:"summary,optional"`
+	Content  string   `json:"content"`
+	CoverUrl string   `json:"coverUrl,optional"`
+	Status   int      `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
+	IsTop    *int     `json:"isTop,optional"`
+	Tags     []string `json:"tags,optional"`
 }
 
 type ArticleSummary struct {

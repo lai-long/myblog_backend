@@ -14,7 +14,7 @@ import (
 
 func ArticleUpdateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.ArticleSaveReq
+		var req types.ArticleUpdateReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return

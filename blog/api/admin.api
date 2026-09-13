@@ -78,7 +78,7 @@ service blog-api {
     post /articles (ArticleSaveReq) returns (EmptyResp)
 
     @handler ArticleUpdate
-    put /articles/:id (ArticleSaveReq) returns (EmptyResp)
+    put /articles/:id (ArticleUpdateReq) returns (EmptyResp)
 
     @handler ArticleDelete
     delete /articles/:id (ArticleIdReq) returns (EmptyResp)

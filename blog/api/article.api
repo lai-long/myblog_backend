@@ -46,7 +46,6 @@ type ArticleDetailReq {
 }
 
 type ArticleSaveReq {
-    Id       int64  `json:"id,optional" path:"id"` // 更新走路径参数，新建不带
     Title    string `json:"title"`
     Slug     string `json:"slug"`
     Summary  string `json:"summary,optional"`
@@ -55,6 +54,21 @@ type ArticleSaveReq {
     Status   int      `json:"status,default=0"` // 0=草稿 1=发布 2=隐藏
     IsTop    *int     `json:"isTop,optional"`  // 1=置顶 0=取消；不传=不动（避免写作页保存误清置顶）
     Tags     []string `json:"tags,optional"`    // 标签名列表；不存在的标签自动创建
+}
+
+// 更新专用：id 走 URL 路径。不能和 ArticleSaveReq 共用一个带 path 标签的 Id 字段——
+// go-zero 的 httpx.Parse 在 POST /articles（路径里没有 :id）上会因找不到路径变量直接报错，
+// 表现为所有新建请求 0.2ms 内返回 50000「服务器开小差了」且不写任何 SQL
+type ArticleUpdateReq {
+    Id       int64    `path:"id"`
+    Title    string   `json:"title"`
+    Slug     string   `json:"slug"`
+    Summary  string   `json:"summary,optional"`
+    Content  string   `json:"content"`
+    CoverUrl string   `json:"coverUrl,optional"`
+    Status   int      `json:"status,default=0"`
+    IsTop    *int     `json:"isTop,optional"`
+    Tags     []string `json:"tags,optional"`
 }
 
 @server (
