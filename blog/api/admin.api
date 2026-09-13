@@ -74,6 +74,10 @@ service blog-api {
     @handler AdminArticleList
     get /articles (AdminArticleListReq) returns (AdminArticleListResp)
 
+    // 后台详情：编辑草稿用，不限 status；公开详情接口对草稿返回 404，不能复用
+    @handler AdminArticleDetail
+    get /articles/:id (ArticleIdReq) returns (ArticleDetail)
+
     @handler ArticleCreate
     post /articles (ArticleSaveReq) returns (EmptyResp)
 

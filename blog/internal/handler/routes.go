@@ -24,6 +24,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: admin.AdminArticleListHandler(serverCtx),
 			},
 			{
+				Method:  http.MethodGet,
+				Path:    "/articles/:id",
+				Handler: admin.AdminArticleDetailHandler(serverCtx),
+			},
+			{
 				Method:  http.MethodPost,
 				Path:    "/articles",
 				Handler: admin.ArticleCreateHandler(serverCtx),

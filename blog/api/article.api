@@ -22,6 +22,7 @@ type ArticleDetail {
     Summary     string  `json:"summary,optional"`
     Content     string  `json:"content"`
     CoverUrl    string  `json:"coverUrl,optional"`
+    Status      int     `json:"status"` // 0=草稿 1=发布 2=隐藏；公开详情恒为 1，后台详情才是真实值
     Views       int64   `json:"views"`
     IsTop       int    `json:"isTop"`
     PublishedAt string  `json:"publishedAt"`
