@@ -51,13 +51,19 @@ func (l *VisitStatsLogic) VisitStats() (resp *types.VisitStatsResp, err error) {
 	if err != nil {
 		return nil, errx.Wrap(err, errx.ServerError, "统计查询失败")
 	}
+	totalArticles, totalViews, err := l.svcCtx.ArticleModel.Stats(l.ctx)
+	if err != nil {
+		return nil, errx.Wrap(err, errx.ServerError, "统计查询失败")
+	}
 
 	resp = &types.VisitStatsResp{
-		TodayPv: todayPv,
-		TodayUv: todayUv,
-		TotalPv: totalPv,
-		TotalUv: totalUv,
-		Trend:   make([]types.DayStat, 0, len(trend)),
+		TodayPv:       todayPv,
+		TodayUv:       todayUv,
+		TotalPv:       totalPv,
+		TotalUv:       totalUv,
+		TotalArticles: totalArticles,
+		TotalViews:    totalViews,
+		Trend:         make([]types.DayStat, 0, len(trend)),
 	}
 	for _, s := range trend {
 		resp.Trend = append(resp.Trend, types.DayStat{Date: s.Date, Pv: s.Pv, Uv: s.Uv})

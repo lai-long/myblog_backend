@@ -31,6 +31,7 @@ type (
 		withSession(session sqlx.Session) ArticleModel
 		FindPage(ctx context.Context, cond ArticleListCond) ([]*Article, error)
 		Count(ctx context.Context, cond ArticleListCond) (int64, error)
+		Stats(ctx context.Context) (total int64, views int64, err error)
 		IncrViews(ctx context.Context, id int64) error
 	}
 
@@ -142,6 +143,19 @@ func (m *customArticleModel) Count(ctx context.Context, cond ArticleListCond) (i
 		return 0, err
 	}
 	return total, nil
+}
+
+// Stats 仪表盘用的聚合：文章总数 + 总阅读量（排除已删除）
+func (m *customArticleModel) Stats(ctx context.Context) (int64, int64, error) {
+	var row struct {
+		Total int64 `db:"c"`
+		Views int64 `db:"v"`
+	}
+	if err := m.conn.QueryRowCtx(ctx, &row, fmt.Sprintf(
+		"SELECT COUNT(*) AS c, COALESCE(SUM(`views`), 0) AS v FROM %s WHERE `deleted_at` IS NULL", m.table)); err != nil {
+		return 0, 0, err
+	}
+	return row.Total, row.Views, nil
 }
 
 // FindOne 覆盖 goctl 生成的版本，加上"未删除"条件，否则软删后还能被查出来

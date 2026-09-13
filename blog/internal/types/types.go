@@ -219,9 +219,11 @@ type UploadResp struct {
 }
 
 type VisitStatsResp struct {
-	TodayPv int64     `json:"todayPv"`
-	TodayUv int64     `json:"todayUv"`
-	TotalPv int64     `json:"totalPv"`
-	TotalUv int64     `json:"totalUv"`
-	Trend   []DayStat `json:"trend"` // 最近 7 天，按日期升序
+	TodayPv       int64     `json:"todayPv"`
+	TodayUv       int64     `json:"todayUv"`
+	TotalPv       int64     `json:"totalPv"`
+	TotalUv       int64     `json:"totalUv"`
+	TotalArticles int64     `json:"totalArticles"` // 未删除文章总数（含草稿）
+	TotalViews    int64     `json:"totalViews"`    // 全部文章阅读量之和
+	Trend         []DayStat `json:"trend"`         // 最近 7 天，按日期升序
 }
